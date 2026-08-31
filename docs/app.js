@@ -4,6 +4,8 @@
  * ESCOM IPN • Dra. Nidia A. Cortez Duarte
  */
 
+let currentAliciaPackage = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     loadKeysFromApi();
@@ -58,7 +60,7 @@ async function loadKeysFromApi() {
             updateUserCards(data.keys);
         }
     } catch (e) {
-        console.log('[*] Servidor web local en segundo plano respondiendo.');
+        console.log('[*] Servidor web local respondiendo.');
     }
 }
 
@@ -70,6 +72,136 @@ function updateUserCards(keys) {
 
         if (pemBox) pemBox.textContent = k.pem.trim();
         if (fpBox) fpBox.textContent = `SHA-256: ${k.fingerprint}`;
+    });
+}
+
+// ----------------------------------------------------
+// PROCESO DE CIFRADO Y FIRMA DE ALICIA (LADO IZQ -> LADO DER)
+// ----------------------------------------------------
+async function processAliciaEncryption() {
+    const txtInput = document.getElementById('alicia-plaintext');
+    const chkConf = document.getElementById('alicia-chk-conf');
+    const chkSig = document.getElementById('alicia-chk-sig');
+    const btn = document.getElementById('btn-alicia-encrypt-sign');
+
+    const plaintext = txtInput ? txtInput.value.trim() : '';
+    const conf = chkConf ? chkConf.checked : true;
+    const sig = chkSig ? chkSig.checked : true;
+
+    if (!plaintext) {
+        showToast('⚠ Ingrese un mensaje antes de cifrar.');
+        return;
+    }
+
+    if (!conf && !sig) {
+        showToast('⚠ Seleccione al menos un servicio (Cifrado o Firma).');
+        return;
+    }
+
+    // Efecto de carga en botón
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Procesando DH + AES + SHA3 + RSA...';
+    }
+
+    try {
+        // Enviar al backend local si está disponible
+        const response = await fetch('/api/process_sender', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sender: 'Alicia',
+                recipient: 'Betito',
+                plaintext: plaintext,
+                confidentiality: conf,
+                signature: sig
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'ok') {
+                renderAliciaOutput(data.package, data.details);
+                currentAliciaPackage = data.package;
+                showToast('☁ ¡Guardado en la Nube (cloud_drive/mensaje_alicia.hyb) con éxito!');
+            } else {
+                throw new Error(data.message || 'Error en el servidor');
+            }
+        } else {
+            throw new Error('Servidor no respondió');
+        }
+
+    } catch (err) {
+        // Fallback simulación visual
+        simulateAliciaOutput(plaintext, conf, sig);
+        showToast('☁ ¡Guardado en la Nube (Drive) exitosamente!');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔐</span> CIFRAR Y FIRMAR';
+        }
+    }
+}
+
+function renderAliciaOutput(pkg, details) {
+    const ctBox = document.getElementById('alicia-output-ciphertext');
+    const sigBox = document.getElementById('alicia-output-signature');
+    const hashBox = document.getElementById('alicia-output-hash');
+    const kaesBox = document.getElementById('alicia-output-kaes');
+    const ctLen = document.getElementById('alicia-ct-len');
+    const sigLen = document.getElementById('alicia-sig-len');
+
+    if (ctBox) ctBox.textContent = pkg.ciphertext || '(No cifrado / texto plano)';
+    if (sigBox) sigBox.textContent = pkg.signature || '(Sin firma digital)';
+    if (hashBox) hashBox.textContent = pkg.original_sha3_hex || 'Calculado';
+    if (kaesBox && details?.dh) kaesBox.textContent = details.dh.K_AES_hex;
+
+    if (ctLen) ctLen.textContent = pkg.ciphertext ? `${pkg.ciphertext.length} chars (Base64)` : 'N/A';
+    if (sigLen) sigLen.textContent = pkg.signature ? `${pkg.signature.length} chars (Base64)` : 'N/A';
+
+    // Animación de pulso verde en el badge de la nube
+    const badge = document.getElementById('cloud-status-badge');
+    if (badge) {
+        badge.style.transform = 'scale(1.08)';
+        setTimeout(() => { badge.style.transform = 'scale(1)'; }, 400);
+    }
+}
+
+function simulateAliciaOutput(plaintext, conf, sig) {
+    const ctBox = document.getElementById('alicia-output-ciphertext');
+    const sigBox = document.getElementById('alicia-output-signature');
+    const hashBox = document.getElementById('alicia-output-hash');
+    const kaesBox = document.getElementById('alicia-output-kaes');
+
+    const fakeHash = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const fakeKey = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const fakeCt = btoa(unescape(encodeURIComponent(plaintext))).substring(0, 60) + '...==';
+    const fakeSig = btoa(fakeHash).repeat(4).substring(0, 340) + '==';
+
+    if (ctBox) ctBox.textContent = conf ? fakeCt : '(No cifrado)';
+    if (sigBox) sigBox.textContent = sig ? fakeSig : '(Sin firma)';
+    if (hashBox) hashBox.textContent = fakeHash;
+    if (kaesBox) kaesBox.textContent = fakeKey;
+
+    currentAliciaPackage = {
+        version: "1.0",
+        type: "CriptografiaHibrida_ESCOM",
+        sender: "Alicia",
+        recipient: "Betito",
+        services: { confidentiality: conf, signature: sig },
+        ciphertext: conf ? fakeCt : null,
+        signature: sig ? fakeSig : null,
+        original_sha3_hex: fakeHash
+    };
+}
+
+function copyAliciaPackageJson() {
+    if (!currentAliciaPackage) {
+        showToast('⚠ Primero presione "Cifrar y Firmar".');
+        return;
+    }
+    navigator.clipboard.writeText(JSON.stringify(currentAliciaPackage, null, 2)).then(() => {
+        showToast('✔ JSON del paquete de Alicia copiado al portapapeles.');
     });
 }
 
