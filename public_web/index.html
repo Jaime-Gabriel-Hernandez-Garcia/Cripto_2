@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criptografía Híbrida • Portal de Identidades & Servicios Criptográficos</title>
+    <meta name="description" content="Portal interactivo de Criptografía Híbrida (AES-256-CBC, Diffie-Hellman, SHA3-256, RSA) para ESCOM IPN.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- HERO SECTION -->
+        <header class="hero-section">
+            <div class="badge-top">
+                <span class="pulse-dot"></span>
+                <span>ESCOM IPN • Dra. Nidia A. Cortez Duarte</span>
+            </div>
+            <h1>
+                Criptografía Híbrida <span class="gradient-text">& Identidades Digitales</span>
+            </h1>
+            <p class="hero-subtitle">
+                Plataforma de distribución de llaves públicas RSA, acuerdo Diffie-Hellman, cifrado simétrico AES-256-CBC y verificación de integridad con SHA3-256.
+            </p>
+        </header>
+
+        <!-- NAVEGACIÓN BENTO UI (4 PESTAÑAS: CONJUNTA, ALICIA, BETITO, CANDY) -->
+        <nav class="nav-container" aria-label="Selector de Pestañas">
+            <div class="nav-pills">
+                <button class="nav-tab active" data-target="tab-conjunto">
+                    <span class="tab-icon">🌐</span> Hub Conjunto
+                </button>
+                <button class="nav-tab" data-target="tab-alicia">
+                    <span class="tab-icon">👩‍💻</span> Alicia (Emisora A)
+                </button>
+                <button class="nav-tab" data-target="tab-betito">
+                    <span class="tab-icon">👨‍💻</span> Betito (Receptor)
+                </button>
+                <button class="nav-tab" data-target="tab-candy">
+                    <span class="tab-icon">👩‍🎨</span> Candy (Emisora B / Alter)
+                </button>
+            </div>
+        </nav>
+
+        <!-- ====================================================================
+             PESTAÑA 1: HUB CONJUNTO (Infraestructura, Nube, Diagrama e Inspector)
+             ==================================================================== -->
+        <section id="tab-conjunto" class="tab-content active">
+            <div class="bento-grid">
+                
+                <!-- Card 1: Directorio Central de Identidades -->
+                <div class="bento-card col-7">
+                    <span class="card-badge purple">Repositorio Criptográfico</span>
+                    <h2 class="card-title">Directorio Activo de Llaves Públicas RSA</h2>
+                    <p class="card-desc">
+                        Infraestructura web para la descarga de certificados y llaves públicas en formato PEM (2048 bits). Cumple el requisito de descarga web en vivo.
+                    </p>
+
+                    <div class="action-pill-row">
+                        <div class="action-pill highlight" onclick="switchTab('tab-alicia')">
+                            <div>
+                                <strong style="color: #ffffff;">Alicia (Emisora Principal)</strong>
+                                <div style="font-size: 0.8rem; color: #a5b4fc;">RSA 2048b • Cifrado AES & Firma SHA3</div>
+                            </div>
+                            <span class="pill-icon-btn">→</span>
+                        </div>
+
+                        <div class="action-pill highlight" onclick="switchTab('tab-betito')">
+                            <div>
+                                <strong style="color: #ffffff;">Betito (Receptor & Auditor)</strong>
+                                <div style="font-size: 0.8rem; color: #93c5fd;">RSA 2048b • Descifrado & Verificación</div>
+                            </div>
+                            <span class="pill-icon-btn">→</span>
+                        </div>
+
+                        <div class="action-pill highlight" onclick="switchTab('tab-candy')">
+                            <div>
+                                <strong style="color: #ffffff;">Candy (Emisora B / Test de Integridad)</strong>
+                                <div style="font-size: 0.8rem; color: #fda4af;">RSA 2048b • Firma & Auditoría de Alteración</div>
+                            </div>
+                            <span class="pill-icon-btn">→</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Estado de la Red y Algoritmos -->
+                <div class="bento-card col-5">
+                    <span class="card-badge cyan">Protocolos en Ejecución</span>
+                    <h2 class="card-title">Servicios Híbridos</h2>
+                    <p class="card-desc">Algoritmos coordinados para garantizar los 4 pilares de seguridad:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-glass);">
+                            <div style="color: #67e8f9; font-weight: 600; font-size: 0.88rem;">🔒 Confidencialidad</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">AES-256-CBC con K e IV derivados de Diffie-Hellman</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-glass);">
+                            <div style="color: #6ee7b7; font-weight: 600; font-size: 0.88rem;">🛡 Integridad de Datos</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">Función resumen criptográfica SHA3-256 (el embudo)</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-glass);">
+                            <div style="color: #c4b5fd; font-weight: 600; font-size: 0.88rem;">✍ Autenticación & No Repudio</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">Firma digital RSA 2048-bit sobre el digest SHA3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Inspector de Paquetes Híbridos (.hyb / JSON) -->
+                <div class="bento-card col-12">
+                    <span class="card-badge blue">Herramienta Forense</span>
+                    <h2 class="card-title">Inspector de Paquetes de la Nube (.hyb)</h2>
+                    <p class="card-desc">
+                        Arrastra un paquete <code>.hyb</code> generado por Alicia o Candy para auditar parámetros Diffie-Hellman, ciphertext y firmas:
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                        <div id="dropZone" style="border: 2px dashed rgba(139, 92, 246, 0.4); background: rgba(8, 12, 24, 0.6); border-radius: 18px; padding: 30px; text-align: center; cursor: pointer;">
+                            <div style="font-size: 2.2rem; margin-bottom: 8px;">📂</div>
+                            <h3 style="font-size: 1.05rem; color: #ffffff; margin-bottom: 4px;">Arrastra un archivo .hyb aquí</h3>
+                            <p style="font-size: 0.85rem; color: #94a3b8;">o haz clic para examinar</p>
+                            <input type="file" id="hybFileInput" accept=".hyb,.json" style="display: none;">
+                        </div>
+
+                        <div>
+                            <textarea id="jsonInput" style="width: 100%; height: 110px; background: #070a14; border: 1px solid var(--border-glass); border-radius: 12px; padding: 12px; color: #cbd5e1; font-family: var(--font-mono); font-size: 0.78rem;" placeholder='Pega el contenido JSON del paquete aquí...'></textarea>
+                            <button class="btn-bento purple" id="btnInspect" style="margin-top: 10px; width: 100%;">
+                                🔬 Inspeccionar Paquete
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="inspectorResults" style="margin-top: 20px; display: none;"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             PESTAÑA 2: ALICIA (Emisora Principal - Alumno 1)
+             ==================================================================== -->
+        <section id="tab-alicia" class="tab-content">
+            <div class="bento-grid">
+                
+                <!-- Alicia: Llave Pública y Endpoints -->
+                <div class="bento-card col-6">
+                    <span class="card-badge cyan">Identidad Digital</span>
+                    <h2 class="card-title">Alicia • Llave Pública RSA</h2>
+                    <p class="card-desc">Llave pública de Alicia accesible en la web para que Betito verifique firmas y no repudio:</p>
+
+                    <div class="pem-display-box">
+                        <div class="pem-top-bar">
+                            <span>ALICIA_PUB.PEM</span>
+                            <span id="fp-alicia">Calculando SHA-256...</span>
+                        </div>
+                        <pre class="pem-pre" id="pem-alicia">Cargando certificado de Alicia...</pre>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-bento glass" onclick="copyPem('Alicia')">📋 Copiar PEM</button>
+                        <a class="btn-bento purple" href="/keys/alicia_pub.pem" target="_blank" download="alicia_pub.pem">⬇ Descargar .pem</a>
+                        <button class="btn-bento glass" onclick="copyUrl('Alicia')">🔗 Copiar URL Web</button>
+                    </div>
+                </div>
+
+                <!-- Alicia: Simulador de Emisión & Generador -->
+                <div class="bento-card col-6">
+                    <span class="card-badge purple">Rol: Emisora A</span>
+                    <h2 class="card-title">Emisión Criptográfica (Alicia $\rightarrow$ Betito)</h2>
+                    <p class="card-desc">Proceso de cifrado y firma digital según el diagrama:</p>
+
+                    <div class="action-pill-row">
+                        <div class="action-pill">
+                            <span>1. Intercambio DH para K e IV</span>
+                            <strong style="color: #67e8f9;">a, c secretos $\rightarrow$ Ka, Kc</strong>
+                        </div>
+                        <div class="action-pill">
+                            <span>2. Cifrado Simétrico</span>
+                            <strong style="color: #93c5fd;">AES-256-CBC (K, IV)</strong>
+                        </div>
+                        <div class="action-pill">
+                            <span>3. Resumen de Mensaje</span>
+                            <strong style="color: #a7f3d0;">Embudo SHA3-256</strong>
+                        </div>
+                        <div class="action-pill">
+                            <span>4. Firma Digital</span>
+                            <strong style="color: #c4b5fd;">RSA Privada de Alicia</strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn-bento purple" style="width: 100%;" onclick="showToast('✔ Alicia generó el paquete mensaje_alicia.hyb listo para subir a Google Drive.')">
+                            🚀 Generar Paquete de Alicia (Prueba A)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             PESTAÑA 3: BETITO (Receptor & Auditor - Alumno 2)
+             ==================================================================== -->
+        <section id="tab-betito" class="tab-content">
+            <div class="bento-grid">
+                
+                <!-- Betito: Identidad -->
+                <div class="bento-card col-6">
+                    <span class="card-badge blue">Identidad Digital</span>
+                    <h2 class="card-title">Betito • Llave Pública RSA</h2>
+                    <p class="card-desc">Llave pública del receptor para acuerdos Diffie-Hellman y recepción segura:</p>
+
+                    <div class="pem-display-box">
+                        <div class="pem-top-bar">
+                            <span>BETITO_PUB.PEM</span>
+                            <span id="fp-betito">Calculando SHA-256...</span>
+                        </div>
+                        <pre class="pem-pre" id="pem-betito">Cargando certificado de Betito...</pre>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-bento glass" onclick="copyPem('Betito')">📋 Copiar PEM</button>
+                        <a class="btn-bento purple" href="/keys/betito_pub.pem" target="_blank" download="betito_pub.pem">⬇ Descargar .pem</a>
+                        <button class="btn-bento glass" onclick="copyUrl('Betito')">🔗 Copiar URL Web</button>
+                    </div>
+                </div>
+
+                <!-- Betito: Tablero de Verificación en Vivo -->
+                <div class="bento-card col-6">
+                    <span class="card-badge green">Rol: Receptor</span>
+                    <h2 class="card-title">Auditoría y Semáforos de Verificación</h2>
+                    <p class="card-desc">Betito descarga la llave pública desde la URL web y comprueba los 4 servicios:</p>
+
+                    <div class="status-grid">
+                        <div class="status-tile ok" id="tile-conf">
+                            <div class="status-icon-box">🔒</div>
+                            <div class="status-info">
+                                <h4>Confidencialidad</h4>
+                                <p>AES-256-CBC descifrado OK</p>
+                            </div>
+                        </div>
+
+                        <div class="status-tile ok" id="tile-integ">
+                            <div class="status-icon-box">🛡</div>
+                            <div class="status-info">
+                                <h4>Integridad de Datos</h4>
+                                <p>SHA3-256 Coincide</p>
+                            </div>
+                        </div>
+
+                        <div class="status-tile ok" id="tile-auth">
+                            <div class="status-icon-box">✔</div>
+                            <div class="status-info">
+                                <h4>Autenticación</h4>
+                                <p>Autor verificado por RSA</p>
+                            </div>
+                        </div>
+
+                        <div class="status-tile ok" id="tile-nonrep">
+                            <div class="status-icon-box">📜</div>
+                            <div class="status-info">
+                                <h4>No Repudio</h4>
+                                <p>Firma válida e irrefutable</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button class="btn-bento success" style="flex: 1;" onclick="setVerificationState(true)">
+                            🟢 Simular Verificación Exitosa (Prueba D/F)
+                        </button>
+                        <button class="btn-bento danger" style="flex: 1;" onclick="setVerificationState(false)">
+                            🔴 Simular Falla de Integridad (Prueba E)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ====================================================================
+             PESTAÑA 4: CANDY (Emisora B & Pruebas de Integridad - Alumno 3)
+             ==================================================================== -->
+        <section id="tab-candy" class="tab-content">
+            <div class="bento-grid">
+                
+                <!-- Candy: Llave Pública -->
+                <div class="bento-card col-6">
+                    <span class="card-badge rose">Identidad Digital</span>
+                    <h2 class="card-title">Candy • Llave Pública RSA</h2>
+                    <p class="card-desc">Llave pública de Candy para firma digital y pruebas de alteración de paquetes:</p>
+
+                    <div class="pem-display-box">
+                        <div class="pem-top-bar">
+                            <span>CANDY_PUB.PEM</span>
+                            <span id="fp-candy">Calculando SHA-256...</span>
+                        </div>
+                        <pre class="pem-pre" id="pem-candy">Cargando certificado de Candy...</pre>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-bento glass" onclick="copyPem('Candy')">📋 Copiar PEM</button>
+                        <a class="btn-bento purple" href="/keys/candy_pub.pem" target="_blank" download="candy_pub.pem">⬇ Descargar .pem</a>
+                        <button class="btn-bento glass" onclick="copyUrl('Candy')">🔗 Copiar URL Web</button>
+                    </div>
+                </div>
+
+                <!-- Candy: Panel de Auditoría y Ataques (Pruebas C, E, F) -->
+                <div class="bento-card col-6">
+                    <span class="card-badge rose">Rol: Emisora B / Alter</span>
+                    <h2 class="card-title">Panel de Control de Pruebas (C, E, F)</h2>
+                    <p class="card-desc">Herramientas interactivas para las pruebas del video:</p>
+
+                    <div class="action-pill-row">
+                        <div class="action-pill highlight" onclick="showToast('✔ Escenario C: Se generaron x.hyb, y.hyb, z.hyb en la nube.')">
+                            <div>
+                                <strong style="color: #ffffff;">Prueba C: Crear 3 Archivos (x, y, z)</strong>
+                                <div style="font-size: 0.8rem; color: #fda4af;">Duplica y renombra paquetes en Drive</div>
+                            </div>
+                            <span class="pill-icon-btn">+</span>
+                        </div>
+
+                        <div class="action-pill" style="border-color: rgba(244,63,94,0.4);" onclick="setVerificationState(false); showToast('⚠ Escenario E: Alterado 1 bit en x.hyb. Betito detectará falla de integridad.');">
+                            <div>
+                                <strong style="color: #fda4af;">Prueba E: Corromper Integridad (1 bit)</strong>
+                                <div style="font-size: 0.8rem; color: #94a3b8;">Hace fallar la verificación RSA/SHA3</div>
+                            </div>
+                            <span class="pill-icon-btn" style="background: rgba(244,63,94,0.25); color: #fda4af;">⚡</span>
+                        </div>
+
+                        <div class="action-pill" style="border-color: rgba(16,185,129,0.4);" onclick="setVerificationState(true); showToast('✔ Escenario F: Paquete x.hyb restaurado a su versión íntegra.');">
+                            <div>
+                                <strong style="color: #6ee7b7;">Prueba F: Restaurar Archivo Íntegro</strong>
+                                <div style="font-size: 0.8rem; color: #94a3b8;">Restaura los 4 semáforos en verde</div>
+                            </div>
+                            <span class="pill-icon-btn" style="background: rgba(16,185,129,0.25); color: #6ee7b7;">✔</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>Instituto Politécnico Nacional • Escuela Superior de Cómputo (ESCOM) | Práctica: Criptografía Híbrida • Dra. Nidia A. Cortez Duarte</p>
+        </footer>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION FLOTANTE -->
+    <div id="toast" class="toast-bento" role="alert">
+        <span style="color: #a78bfa; font-size: 1.2rem;">✔</span>
+        <span id="toast-msg">Mensaje copiado al portapapeles</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
