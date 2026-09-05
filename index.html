@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Práctica Criptografía Híbrida - ESCOM IPN</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header Minimalista -->
+  <header>
+    <div class="logo-badge">
+      <div class="logo-icon">CH</div>
+      <div>
+        <h1>Criptografía Híbrida</h1>
+        <div class="subtitle">ESCOM IPN &bull; Lab Dra. Nidia Cortez</div>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button id="btn-crypto-refs" class="btn btn-secondary" title="Ver referencias y normativas criptográficas (NIST, RFC)">
+        Referencias Normativas
+      </button>
+      <button id="btn-export-keys" class="btn btn-secondary" title="Descargar paquete de llaves públicas del equipo">
+        Descargar Llaves PEM
+      </button>
+      <button id="btn-quick-guide" class="btn btn-secondary">
+        Guía Incisos
+      </button>
+    </div>
+  </header>
+
+  <!-- Barra de Pestañas Multi-Rol Minimalista -->
+  <nav class="nav-tabs" id="main-nav-tabs">
+    <button class="tab-btn active" data-tab="view-diagram">Diagrama Interactivo</button>
+    <button class="tab-btn tab-alicia" data-tab="view-alicia">Alicia (Emisor 1)</button>
+    <button class="tab-btn tab-candy" data-tab="view-candy">Candy (Emisor 2 / Ataque)</button>
+    <button class="tab-btn tab-betito" data-tab="view-betito">Betito (Receptor)</button>
+    <button class="tab-btn" data-tab="view-drive">
+      Nube Drive <span id="drive-badge-count" class="role-badge badge-blue" style="margin-left:4px; font-size:10px;">0</span>
+    </button>
+    <button class="tab-btn" data-tab="view-guide">Guía Video (A-G)</button>
+  </nav>
+
+  <!-- Contenedor Principal de Vistas -->
+  <main>
+
+    <!-- ========================================================
+         PESTAÑA 1: DIAGRAMA INTERACTIVO (SIMULADOR VISUAL)
+         ======================================================== -->
+    <div id="view-diagram" class="tab-content-panel active">
+      <!-- Barra de controles del diagrama -->
+      <section class="control-bar" style="border-radius:12px; margin-bottom:1rem;">
+        <div class="input-group">
+          <label for="input-message">Mensaje en Diagrama (m):</label>
+          <input type="text" id="input-message" class="message-input" value="¡Hola Betito! Este mensaje es confidencial y auténtico." placeholder="Escribe un mensaje para cifrar..." maxlength="120">
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-play" class="btn btn-primary">
+            <span id="play-icon">▶</span> <span id="play-text">Iniciar Flujo</span>
+          </button>
+          <button id="btn-step" class="btn btn-secondary">
+            <span>⏭</span> Paso a Paso
+          </button>
+          <button id="btn-reset" class="btn btn-secondary">
+            <span>🔄</span> Reiniciar
+          </button>
+          <button id="btn-tamper" class="btn btn-danger-outline" title="Simular alteración de paquete en la nube">
+            <span>⚡</span> Alterar Paquete
+          </button>
+        </div>
+
+        <div class="speed-control">
+          <span>⏱ Pausa/Paso:</span>
+          <select id="select-speed">
+            <option value="4000">4 seg</option>
+            <option value="3000" selected>3 seg</option>
+            <option value="1800">1.8 seg</option>
+            <option value="800">0.8 seg</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Estado actual del flujo -->
+      <div class="status-pill" id="status-pill">
+        <div class="status-dot"></div>
+        <span class="status-text" id="status-text">Listo. Presiona "Iniciar Flujo" o usa "Paso a Paso".</span>
+        <span class="status-hint" id="status-step-hint">(Paso 0 de 8)</span>
+      </div>
+
+      <!-- SVG Diagram Stage -->
+      <div class="diagram-stage">
+        <svg id="hybrid-diagram" viewBox="0 0 1380 720" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="glow-pink" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8" />
+            </marker>
+            <marker id="arrow-pink" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#ec4899" />
+            </marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+            </marker>
+            <marker id="arrow-yellow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#f59e0b" />
+            </marker>
+          </defs>
+
+          <!-- DIFFIE - HELLMAN TOP BOX -->
+          <g id="station-dh" class="station-node" data-station="dh" transform="translate(420, 20)">
+            <rect class="dh-box" x="0" y="0" width="460" height="230" rx="16" />
+            <text x="230" y="24" text-anchor="middle" class="label-badge" font-size="14" fill="#f8fafc">Diffie - Hellman</text>
+            
+            <rect class="dh-sub-k node-shape" x="12" y="34" width="436" height="88" />
+            <text x="22" y="52" class="label-badge" fill="#38bdf8">Para K</text>
+            
+            <text x="24" y="70" class="label-math">a = &lt;secret&gt;</text>
+            <text x="24" y="86" class="label-math">Ka = g^a mod n</text>
+            <text x="24" y="104" class="label-math" fill="#38bdf8">K = S = Kb^a mod n</text>
+            
+            <g transform="translate(195, 48)">
+              <path d="M 10,25 C 0,25 -5,12 8,8 C 10,0 26,-2 32,5 C 38,0 52,2 52,12 C 60,12 62,25 50,25 Z" fill="rgba(56, 189, 248, 0.2)" stroke="#38bdf8" stroke-width="1.2" />
+              <text x="28" y="16" text-anchor="middle" font-size="9" fill="#f8fafc" font-family="var(--font-mono)">g ,n, Ka</text>
+              <text x="28" y="26" text-anchor="middle" font-size="9" fill="#38bdf8" font-family="var(--font-mono)">Kb</text>
+            </g>
+            <path d="M 125,72 L 190,72" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#arrow-blue)" />
+            <path d="M 260,72 L 320,72" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#arrow-blue)" />
+
+            <text x="328" y="70" class="label-math">b = &lt;secret&gt;</text>
+            <text x="328" y="86" class="label-math">Kb = g^b mod n</text>
+            <text x="328" y="104" class="label-math" fill="#38bdf8">K = S = Ka^b mod n</text>
+
+            <rect class="dh-sub-iv node-shape" x="12" y="130" width="436" height="88" />
+            <text x="22" y="148" class="label-badge" fill="#f59e0b">Para IV</text>
+
+            <text x="24" y="166" class="label-math">c = &lt;secret&gt;</text>
+            <text x="24" y="182" class="label-math">Kc = g^c mod n</text>
+            <text x="24" y="200" class="label-math" fill="#f59e0b">IV = S = Kd^c mod n</text>
+
+            <g transform="translate(195, 144)">
+              <path d="M 10,25 C 0,25 -5,12 8,8 C 10,0 26,-2 32,5 C 38,0 52,2 52,12 C 60,12 62,25 50,25 Z" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" stroke-width="1.2" />
+              <text x="28" y="16" text-anchor="middle" font-size="9" fill="#f8fafc" font-family="var(--font-mono)">g ,n, Kc</text>
+              <text x="28" y="26" text-anchor="middle" font-size="9" fill="#f59e0b" font-family="var(--font-mono)">Kd</text>
+            </g>
+            <path d="M 125,168 L 190,168" stroke="#ef4444" stroke-width="1.8" marker-end="url(#arrow-pink)" />
+            <path d="M 260,188 L 195,188" stroke="#10b981" stroke-width="1.8" marker-end="url(#arrow-green)" />
+
+            <text x="328" y="166" class="label-math">IV = S = Kc^d mod n</text>
+            <text x="328" y="186" class="label-math">d = &lt;secret&gt;</text>
+            <text x="328" y="202" class="label-math">Kd = g^d mod n</text>
+            <text x="230" y="222" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">🔍 Clic para inspeccionar matemáticas DH</text>
+          </g>
+
+          <!-- TITULARES -->
+          <text x="210" y="160" text-anchor="middle" class="label-title alice">Alicia</text>
+          <text x="1080" y="160" text-anchor="middle" class="label-title betito">Betito</text>
+
+          <!-- RUTAS DE FLUJO -->
+          <path id="track-m-aes" class="flow-track" d="M 145,260 L 200,260" />
+          <path id="stream-m-aes" class="flow-stream" d="M 145,260 L 200,260" />
+
+          <path id="track-m-hash" class="flow-track" d="M 75,330 L 75,450" />
+          <path id="stream-m-hash" class="flow-stream" d="M 75,330 L 75,450" />
+
+          <path id="track-dh-alice-aes" class="flow-track" d="M 430,225 C 320,240 235,310 235,370" />
+          <path id="stream-dh-alice-aes" class="flow-stream stream-yellow" d="M 430,225 C 320,240 235,310 235,370" />
+
+          <path id="track-aes-cipher" class="flow-track" d="M 270,260 L 335,260 L 335,350" />
+          <path id="stream-aes-cipher" class="flow-stream" d="M 270,260 L 335,260 L 335,350" />
+
+          <path id="track-hash-rsa" class="flow-track" d="M 130,560 L 200,560" />
+          <path id="stream-hash-rsa" class="flow-stream" d="M 130,560 L 200,560" />
+
+          <path id="track-rsa-sig" class="flow-track" d="M 270,560 L 335,560 L 335,465" />
+          <path id="stream-rsa-sig" class="flow-stream stream-pink" d="M 270,560 L 335,560 L 335,465" />
+
+          <path id="track-cipher-cloud" class="flow-track" d="M 390,390 L 580,390 L 800,390" />
+          <path id="stream-cipher-cloud" class="flow-stream" d="M 390,390 L 580,390 L 800,390" />
+
+          <path id="track-sig-cloud" class="flow-track" d="M 420,445 L 590,445 L 790,445" />
+          <path id="stream-sig-cloud" class="flow-stream stream-pink" d="M 420,445 L 590,445 L 790,445" />
+
+          <path id="track-cipher-betito-aes" class="flow-track" d="M 855,390 L 855,260 L 1030,260" />
+          <path id="stream-cipher-betito-aes" class="flow-stream" d="M 855,390 L 855,260 L 1030,260" />
+
+          <path id="track-dh-betito-aes" class="flow-track" d="M 870,225 C 960,240 1065,310 1065,370" />
+          <path id="stream-dh-betito-aes" class="flow-stream stream-yellow" d="M 870,225 C 960,240 1065,310 1065,370" />
+
+          <path id="track-betito-aes-m" class="flow-track" d="M 1100,260 L 1215,260" />
+          <path id="stream-betito-aes-m" class="flow-stream" d="M 1100,260 L 1215,260" />
+
+          <path id="track-betito-m-hash" class="flow-track" d="M 1270,330 L 1270,450" />
+          <path id="stream-betito-m-hash" class="flow-stream" d="M 1270,330 L 1270,450" />
+
+          <path id="track-betito-hash-comp" class="flow-track" d="M 1205,560 L 1150,560" />
+          <path id="stream-betito-hash-comp" class="flow-stream" d="M 1205,560 L 1150,560" />
+
+          <path id="track-betito-sig-rsa" class="flow-track" d="M 850,465 L 850,560 L 880,560" />
+          <path id="stream-betito-sig-rsa" class="flow-stream stream-pink" d="M 850,465 L 850,560 L 880,560" />
+
+          <path id="track-betito-rsa-comp" class="flow-track" d="M 950,560 L 1080,560" />
+          <path id="stream-betito-rsa-comp" class="flow-stream stream-pink" d="M 950,560 L 1080,560" />
+
+          <!-- ALICIA ELEMENTOS -->
+          <g id="station-alice-m" class="station-node" data-station="alice-m" transform="translate(15, 210)">
+            <rect class="node-shape" x="0" y="0" width="130" height="120" rx="10" />
+            <text x="65" y="-8" text-anchor="middle" font-weight="700" font-size="18" fill="#ec4899">m (Alicia)</text>
+            <foreignObject x="5" y="8" width="120" height="104">
+              <div xmlns="http://www.w3.org/1999/xhtml" class="diagram-doc-box">
+                <textarea id="diagram-msg-input" class="diagram-msg-textarea" placeholder="Escribe aquí tu mensaje m...">¡Hola Betito! Este mensaje es confidencial y auténtico.</textarea>
+              </div>
+            </foreignObject>
+            <text x="65" y="132" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">✍️ Escribe aquí</text>
+          </g>
+
+          <g id="station-alice-aes" class="station-node" data-station="alice-aes" transform="translate(200, 230)">
+            <ellipse class="node-shape" cx="35" cy="30" rx="42" ry="24" />
+            <text x="35" y="35" text-anchor="middle" font-weight="700" font-size="14" fill="#f8fafc">AES<tspan font-size="10" dy="4">CBC</tspan></text>
+            <g transform="translate(-10, 48)">
+              <path d="M 45,15 C 45,9 50,5 56,5 C 62,5 67,9 67,15 C 67,19 64,23 60,24 L 60,38 L 56,42 L 56,36 L 52,36 L 52,30 L 60,30 L 60,24 C 56,23 45,19 45,15 Z" fill="#f59e0b" filter="drop-shadow(0 0 4px #f59e0b)" />
+              <text x="35" y="24" text-anchor="end" class="label-math" fill="#f59e0b" font-weight="600">IV, K<tspan font-size="8" dy="2">AES</tspan></text>
+            </g>
+          </g>
+
+          <g id="station-alice-cipher" class="station-node" data-station="alice-cipher" transform="translate(305, 340)">
+            <path class="node-shape" d="M 10,10 C 25,5 45,5 60,10 C 70,12 75,25 75,70 C 75,85 60,95 45,90 C 30,85 10,85 10,70 Z" fill="#1e293b" />
+            <path d="M 18,25 L 58,25 M 18,38 L 58,38 M 18,51 L 58,51 M 18,64 L 45,64" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round" />
+            <text x="40" y="108" text-anchor="middle" class="station-hint" fill="#c084fc" font-size="10">Criptograma</text>
+          </g>
+
+          <g id="station-alice-hash" class="station-node" data-station="alice-hash" transform="translate(38, 440)">
+            <path class="node-shape" d="M 5,5 L 55,5 C 55,20 38,35 38,55 L 22,55 C 22,35 5,20 5,5 Z" fill="#475569" />
+            <rect class="node-shape" x="-20" y="65" width="100" height="28" rx="4" fill="#0284c7" />
+            <text id="lbl-alice-hash" x="30" y="83" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#ffffff">1011..01</text>
+            <text x="30" y="110" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">Hash SHA-256</text>
+          </g>
+
+          <g id="station-alice-rsa" class="station-node" data-station="alice-rsa" transform="translate(200, 530)">
+            <ellipse class="node-shape node-pink" cx="35" cy="30" rx="40" ry="24" />
+            <text x="35" y="35" text-anchor="middle" font-weight="700" font-size="14" fill="#f8fafc">RSA</text>
+            <g transform="translate(18, 40)">
+              <path d="M 15,10 C 15,4 20,0 26,0 C 32,0 37,4 37,10 C 37,14 34,18 30,19 L 30,35 L 26,39 L 26,33 L 22,33 L 22,27 L 30,27 L 30,19 C 26,18 15,14 15,10 Z" fill="#ec4899" filter="drop-shadow(0 0 5px #ec4899)" />
+              <text x="44" y="24" class="label-math" fill="#ec4899" font-weight="700">A<tspan font-size="8" dy="2">Privada</tspan></text>
+            </g>
+          </g>
+
+          <g id="station-alice-sig" class="station-node" data-station="alice-sig" transform="translate(305, 410)">
+            <rect class="node-shape node-pink" x="0" y="0" width="115" height="32" rx="4" fill="#0284c7" />
+            <text id="lbl-alice-sig" x="57" y="20" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#ffffff">A0F4..234</text>
+            <text x="57" y="48" text-anchor="middle" class="label-desc" fill="#e2e8f0" font-weight="600">Firma digital</text>
+          </g>
+
+          <!-- NUBE -->
+          <g id="station-cloud" class="station-node" data-station="cloud" transform="translate(520, 360)">
+            <path class="node-shape" d="M 30,80 C 0,80 -15,45 20,30 C 25,5 75,-5 95,15 C 115,-2 160,5 160,35 C 185,35 190,80 150,80 Z" fill="rgba(30, 41, 59, 0.7)" stroke="#38bdf8" stroke-width="2.5" />
+            <text x="90" y="48" text-anchor="middle" font-size="24">☁️</text>
+            <text x="90" y="70" text-anchor="middle" class="label-badge" fill="#94a3b8" font-size="11">Canal Inseguro</text>
+            <text x="90" y="100" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">Inspeccionar Red</text>
+          </g>
+
+          <!-- BETITO ELEMENTOS -->
+          <g id="station-betito-sig-in" class="station-node" data-station="betito-sig-in" transform="translate(790, 410)">
+            <rect class="node-shape node-pink" x="0" y="0" width="115" height="32" rx="4" fill="#0284c7" />
+            <text id="lbl-betito-sig" x="57" y="20" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#ffffff">A0F4..234</text>
+            <text x="57" y="48" text-anchor="middle" class="label-desc" fill="#e2e8f0" font-weight="600">Firma digital</text>
+          </g>
+
+          <g id="station-betito-cipher-in" class="station-node" data-station="betito-cipher-in" transform="translate(820, 340)">
+            <path class="node-shape" d="M 10,10 C 25,5 45,5 60,10 C 70,12 75,25 75,70 C 75,85 60,95 45,90 C 30,85 10,85 10,70 Z" fill="#1e293b" />
+            <path d="M 18,25 L 58,25 M 18,38 L 58,38 M 18,51 L 58,51 M 18,64 L 45,64" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round" />
+            <text x="40" y="108" text-anchor="middle" class="station-hint" fill="#c084fc" font-size="10">Criptograma</text>
+          </g>
+
+          <g id="station-betito-aes" class="station-node" data-station="betito-aes" transform="translate(1030, 230)">
+            <ellipse class="node-shape" cx="35" cy="30" rx="42" ry="24" />
+            <text x="35" y="35" text-anchor="middle" font-weight="700" font-size="14" fill="#f8fafc">AES<tspan font-size="10" dy="4">CBC</tspan></text>
+            <g transform="translate(-10, 48)">
+              <path d="M 45,15 C 45,9 50,5 56,5 C 62,5 67,9 67,15 C 67,19 64,23 60,24 L 60,38 L 56,42 L 56,36 L 52,36 L 52,30 L 60,30 L 60,24 C 56,23 45,19 45,15 Z" fill="#f59e0b" filter="drop-shadow(0 0 4px #f59e0b)" />
+              <text x="35" y="24" text-anchor="end" class="label-math" fill="#f59e0b" font-weight="600">IV, K<tspan font-size="8" dy="2">AES</tspan></text>
+            </g>
+          </g>
+
+          <g id="station-betito-m" class="station-node" data-station="betito-m" transform="translate(1215, 210)">
+            <rect class="node-shape" x="0" y="0" width="130" height="120" rx="10" />
+            <text x="65" y="-8" text-anchor="middle" font-weight="700" font-size="18" fill="#38bdf8">m (Betito)</text>
+            <foreignObject x="5" y="8" width="120" height="104">
+              <div xmlns="http://www.w3.org/1999/xhtml" class="diagram-doc-box">
+                <div id="diagram-betito-output" class="diagram-doc-display">Esperando flujo...</div>
+              </div>
+            </foreignObject>
+            <text x="65" y="132" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">Descifrado</text>
+          </g>
+
+          <g id="station-betito-hash" class="station-node" data-station="betito-hash" transform="translate(1240, 440)">
+            <path class="node-shape" d="M 5,5 L 55,5 C 55,20 38,35 38,55 L 22,55 C 22,35 5,20 5,5 Z" fill="#475569" />
+            <rect class="node-shape" x="-35" y="65" width="100" height="28" rx="4" fill="#0284c7" />
+            <text id="lbl-betito-hash" x="15" y="83" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#ffffff">1011..01</text>
+            <text x="15" y="110" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">Hash Betito</text>
+          </g>
+
+          <g id="station-betito-rsa" class="station-node" data-station="betito-rsa" transform="translate(880, 530)">
+            <ellipse class="node-shape node-pink" cx="35" cy="30" rx="40" ry="24" />
+            <text x="35" y="35" text-anchor="middle" font-weight="700" font-size="14" fill="#f8fafc">RSA</text>
+            <g transform="translate(18, 40)">
+              <path d="M 15,10 C 15,4 20,0 26,0 C 32,0 37,4 37,10 C 37,14 34,18 30,19 L 30,35 L 26,39 L 26,33 L 22,33 L 22,27 L 30,27 L 30,19 C 26,18 15,14 15,10 Z" fill="#f8fafc" stroke="#ec4899" stroke-width="1.5" filter="drop-shadow(0 0 5px #ec4899)" />
+              <text x="44" y="24" class="label-math" fill="#38bdf8" font-weight="700">A<tspan font-size="8" dy="2">Pública</tspan></text>
+            </g>
+            <g transform="translate(100, 16)">
+              <rect class="node-shape" x="0" y="0" width="85" height="28" rx="4" fill="#0284c7" />
+              <text id="lbl-betito-rsa-hash" x="42" y="18" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#ffffff">1011..01</text>
+            </g>
+          </g>
+
+          <!-- COMPARADOR -->
+          <g id="station-comparator" class="station-node" data-station="comparator" transform="translate(1115, 560)">
+            <path id="comparator-diamond" class="node-shape" d="M 0,-30 L 30,0 L 0,30 L -30,0 Z" />
+            <text x="0" y="6" text-anchor="middle" font-size="20" font-weight="800" fill="#f8fafc">=</text>
+            <g id="icon-happy" opacity="0.3" transform="translate(-5, 45)">
+              <text x="0" y="0" font-size="26">😃</text>
+            </g>
+            <g id="icon-sad" opacity="0.3" transform="translate(-5, -55)">
+              <text x="0" y="0" font-size="26">☹️</text>
+            </g>
+            <text x="0" y="78" text-anchor="middle" class="station-hint" fill="#10b981" font-size="10">Comparación</text>
+          </g>
+
+          <!-- CHECKLIST SEGURIDAD -->
+          <g id="security-checklist" transform="translate(1160, 615)">
+            <text id="chk-conf" x="0" y="0" class="security-list-item">Confidencialidad</text>
+            <text id="chk-integ" x="0" y="20" class="security-list-item">Integridad de Datos</text>
+            <text id="chk-auth" x="0" y="40" class="security-list-item">Autenticación</text>
+            <text id="chk-nonrep" x="0" y="60" class="security-list-item">No repudio</text>
+            <text id="chk-badge" x="145" y="40" font-size="22" opacity="0.2">✅</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         PESTAÑA 2: ALICIA (EMISOR 1)
+         ======================================================== -->
+    <div id="view-alicia" class="tab-content-panel">
+      <div class="role-grid">
+        <!-- Formulario de Envío de Alicia -->
+        <div class="role-card card-pink">
+          <div class="role-card-header">
+            <h2>Alicia (Emisor 1)</h2>
+            <span class="role-badge badge-pink">RSA-2048 Activa</span>
+          </div>
+
+          <!-- Manejo de Llaves -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Llave pública de Alicia:</span>
+            <button id="btn-download-alicia-key" class="btn btn-secondary btn-xs">
+              Descargar alicia_public.pem
+            </button>
+          </div>
+
+          <!-- Selector de Servicios: Cifrado y/o Firma -->
+          <div class="service-selector-box">
+            <div class="service-selector-title">Servicios Criptográficos (Alicia):</div>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="alicia-opt-cipher" checked>
+                <span>Cifrado Simétrico (AES-CBC + DH)</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="alicia-opt-sign" checked>
+                <span>Firma Digital RSA (SHA-256)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Mensaje m -->
+          <div class="input-group" style="flex-direction:column; align-items:flex-start;">
+            <label for="alicia-msg-input" style="color:var(--text-muted); font-size:0.8rem;">Mensaje para Betito:</label>
+            <textarea id="alicia-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Alicia...">¡Hola Betito! Este mensaje es confidencial y auténtico de parte de Alicia.</textarea>
+          </div>
+
+          <!-- Nombre del archivo en la nube -->
+          <div style="display:flex; gap:0.6rem; align-items:center;">
+            <label style="font-size:0.8rem; color:var(--text-muted); white-space:nowrap;">Nombre archivo:</label>
+            <input type="text" id="alicia-filename-input" class="message-input" value="mensaje_alicia" style="padding:0.35rem 0.6rem; flex:1;">
+          </div>
+
+          <!-- Botón de Envío -->
+          <button id="btn-alicia-send" class="btn btn-primary" style="padding:0.55rem; font-size:0.84rem;">
+            Cifrar, Firmar y Subir (Inciso A)
+          </button>
+        </div>
+
+        <!-- Consola de Detalles de Operación de Alicia -->
+        <div class="role-card">
+          <div class="role-card-header">
+            <h3>Operaciones Criptográficas (Alicia)</h3>
+            <span class="role-badge badge-pink">Inspección</span>
+          </div>
+          <div class="op-console-container">
+            <div class="console-header-bar">
+              <span>Bitácora Matemática en Tiempo Real</span>
+              <span>SHA-256 &bull; DH-MODP &bull; AES-128</span>
+            </div>
+            <div id="alicia-console" class="op-console">
+[+] Esperando inicio de operación de Alicia (Inciso A)...
+Aquí se mostrarán parámetros Ka y Kc, clave K_AES, digest SHA-256 y firma digital RSA.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         PESTAÑA 3: CANDY (EMISOR 2 Y ATAQUE)
+         ======================================================== -->
+    <div id="view-candy" class="tab-content-panel">
+      <div class="role-grid">
+        <!-- Formulario de Candy -->
+        <div class="role-card card-purple">
+          <div class="role-card-header">
+            <h2>Candy (Emisor 2 / Ataque)</h2>
+            <button id="btn-download-candy-key" class="btn btn-secondary btn-xs">
+              Descargar candy_public.pem
+            </button>
+          </div>
+
+          <!-- Switch Segmentado Minimalista: Envío vs Ataque -->
+          <div class="segmented-control">
+            <button type="button" class="segment-pill pill-purple active" id="btn-tab-candy-send">
+              Envío Legítimo (Inciso B)
+            </button>
+            <button type="button" class="segment-pill pill-red" id="btn-tab-candy-attack">
+              Laboratorio Ataques (Incisos C, E, F)
+            </button>
+          </div>
+
+          <!-- PANEL 1: Envío Legítimo de Candy -->
+          <div id="candy-panel-send" style="display:flex; flex-direction:column; gap:0.85rem;">
+            <div class="service-selector-box">
+              <div class="service-selector-title">Servicios Criptográficos (Candy):</div>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="candy-opt-cipher" checked>
+                  <span>Cifrado Simétrico (AES-CBC + DH)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="candy-opt-sign" checked>
+                  <span>Firma Digital RSA (SHA-256)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="input-group" style="flex-direction:column; align-items:flex-start;">
+              <label for="candy-msg-input" style="color:var(--text-muted); font-size:0.8rem;">Mensaje para Betito:</label>
+              <textarea id="candy-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Candy...">¡Hola Betito! Mensaje firmado y cifrado legítimamente por Candy.</textarea>
+            </div>
+
+            <div style="display:flex; gap:0.6rem; align-items:center;">
+              <label style="font-size:0.8rem; color:var(--text-muted); white-space:nowrap;">Nombre archivo:</label>
+              <input type="text" id="candy-filename-input" class="message-input" value="mensaje_candy" style="padding:0.35rem 0.6rem; flex:1;">
+            </div>
+
+            <button id="btn-candy-send" class="btn btn-primary" style="padding:0.55rem; font-size:0.84rem;">
+              Cifrar, Firmar y Subir (Inciso B)
+            </button>
+          </div>
+
+          <!-- PANEL 2: Laboratorio de Ataque en la Nube (Incisos C, E, F) -->
+          <div id="candy-panel-attack" style="display:none; flex-direction:column; gap:0.75rem;">
+            <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:6px; padding:0.8rem; display:flex; flex-direction:column; gap:0.65rem;">
+              <div style="font-size:0.78rem; color:var(--accent-rose); font-weight:600;">
+                Manipulación en Canal Inseguro (Nube Drive):
+              </div>
+
+              <!-- Inciso C -->
+              <div class="workflow-step">
+                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">1. Duplicar y renombrar a x, y, z (Inciso C):</span>
+                <button id="btn-candy-inciso-c" class="btn btn-secondary btn-sm" style="justify-content:flex-start;">
+                  Duplicar archivo y renombrar a x, y, z
+                </button>
+              </div>
+
+              <!-- Inciso E -->
+              <div class="workflow-step">
+                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">2. Alteración de Integridad (Inciso E):</span>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                  <select id="select-tamper-target" class="message-input" style="padding:0.35rem; flex:1; font-size:0.78rem;">
+                    <option value="">Seleccionar archivo a alterar...</option>
+                  </select>
+                  <button id="btn-candy-inciso-e" class="btn btn-danger-outline btn-sm">
+                    Alterar Integridad
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inciso F -->
+              <div class="workflow-step">
+                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">3. Restauración de Integridad (Inciso F):</span>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                  <select id="select-repair-target" class="message-input" style="padding:0.35rem; flex:1; font-size:0.78rem;">
+                    <option value="">Seleccionar archivo alterado...</option>
+                  </select>
+                  <button id="btn-candy-inciso-f" class="btn btn-secondary btn-sm" style="color:var(--accent-emerald);">
+                    Restaurar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consola de Detalles de Candy -->
+        <div class="role-card">
+          <div class="role-card-header">
+            <h3>Operaciones Criptográficas (Candy)</h3>
+            <span class="role-badge badge-purple">Inspección</span>
+          </div>
+          <div class="op-console-container">
+            <div class="console-header-bar">
+              <span>Bitácora de Emisión y Manipulación</span>
+              <span>SHA-256 &bull; DH-MODP &bull; AES-128</span>
+            </div>
+            <div id="candy-console" class="op-console">
+[+] Esperando acción de Candy (Inciso B, C, E o F)...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         PESTAÑA 4: BETITO (RECEPTOR Y VERIFICACIÓN)
+         ======================================================== -->
+    <div id="view-betito" class="tab-content-panel">
+      <div class="role-grid">
+        <!-- Panel de Verificación de Betito -->
+        <div class="role-card card-blue">
+          <div class="role-card-header">
+            <h2>Betito (Receptor)</h2>
+            <button id="btn-download-betito-key" class="btn btn-secondary btn-xs">
+              Descargar betito_public.pem
+            </button>
+          </div>
+
+          <!-- PASO 1: Archivo de la Nube y Llave del Remitente -->
+          <div class="service-selector-box">
+            <div class="service-selector-title">
+              <span class="role-badge badge-blue">Paso 1</span>
+              <span>Archivo de la Nube y Llave del Remitente:</span>
+            </div>
+            <div style="display:flex; gap:0.4rem; margin-bottom:0.4rem;">
+              <select id="select-betito-file" class="message-input" style="flex:1;">
+                <option value="">Cargando archivos de la nube...</option>
+              </select>
+            </div>
+            <!-- Acciones compactas de llaves -->
+            <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+              <label class="btn btn-secondary btn-xs" style="cursor:pointer;" title="Importar archivo .pem descargado">
+                Importar .PEM
+                <input type="file" id="input-betito-pem" accept=".pem,.txt" style="display:none;">
+              </label>
+              <button id="btn-load-web-alice" class="btn btn-secondary btn-xs" title="Cargar alicia_public.pem">
+                Web Alicia
+              </button>
+              <button id="btn-load-web-candy" class="btn btn-secondary btn-xs" title="Cargar candy_public.pem">
+                Web Candy
+              </button>
+              <button id="btn-reset-key-mode" class="btn btn-secondary btn-xs" title="Restaurar detección automática">
+                Auto
+              </button>
+            </div>
+            <div id="betito-key-status" style="margin-top:0.3rem; font-size:0.75rem; color:var(--accent); font-weight:500;">
+              Detección automática de llaves activada.
+            </div>
+          </div>
+
+          <!-- PASO 2: Menú de Procesos (Pág. 3) -->
+          <div class="service-selector-box">
+            <div class="service-selector-title">
+              <span class="role-badge badge-blue">Paso 2</span>
+              <span>Procesos Requeridos (1 o 2 de 2):</span>
+            </div>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="betito-opt-decrypt" checked>
+                <span>Descifrado (AES-CBC + DH)</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="betito-opt-verify" checked>
+                <span>Verificación (RSA-SHA256)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Botón de Ejecución -->
+          <button id="btn-betito-process" class="btn btn-primary" style="padding:0.55rem; font-size:0.84rem;">
+            Procesar Archivo Seleccionado (Inciso D)
+          </button>
+
+          <!-- PASO 3: Resultados y Semáforo de Servicios -->
+          <div id="betito-results-card" class="results-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Autor Identificado:</span>
+              <span id="betito-detected-author" class="role-badge badge-blue">Ninguno</span>
+            </div>
+
+            <!-- Semáforo Tipo Métrica de 4 Servicios -->
+            <div class="services-metric-grid">
+              <div id="badge-svc-conf" class="metric-pill badge-red">
+                <span>Confidencialidad</span> <span>PENDIENTE</span>
+              </div>
+              <div id="badge-svc-integ" class="metric-pill badge-red">
+                <span>Integridad</span> <span>PENDIENTE</span>
+              </div>
+              <div id="badge-svc-auth" class="metric-pill badge-red">
+                <span>Autenticación</span> <span>PENDIENTE</span>
+              </div>
+              <div id="badge-svc-nonrep" class="metric-pill badge-red">
+                <span>No Repudio</span> <span>PENDIENTE</span>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.2rem 0;">
+              <span id="betito-face-icon" style="font-size:1.4rem;">😐</span>
+              <span id="betito-verdict-text" style="font-size:0.8rem; font-weight:500; color:#cbd5e1;">Selecciona un archivo y presiona Procesar.</span>
+            </div>
+
+            <div>
+              <label style="font-size:0.72rem; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Mensaje Recuperado:</label>
+              <div id="betito-recovered-msg" class="code-block green" style="min-height:36px; margin-top:0.2rem;">[Esperando archivo...]</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consola de Detalles de Betito -->
+        <div class="role-card">
+          <div class="role-card-header">
+            <h3>Operaciones Criptográficas (Betito)</h3>
+            <span class="role-badge badge-blue">Traza en Vivo</span>
+          </div>
+          <div class="op-console-container">
+            <div class="console-header-bar">
+              <span>Bitácora de Descifrado y Verificación</span>
+              <span>SHA-256 &bull; DH-MODP &bull; RSA</span>
+            </div>
+            <div id="betito-console" class="op-console">
+[+] Esperando que Betito procese un archivo de la nube (Inciso D)...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         PESTAÑA 5: NUBE (DRIVE COMPARTIDO)
+         ======================================================== -->
+    <div id="view-drive" class="tab-content-panel">
+      <div class="role-card" style="width:100%;">
+        <div class="role-card-header">
+          <h2>Repositorio Central de la Nube (Drive)</h2>
+          <div class="btn-group">
+            <button id="btn-drive-clear" class="btn btn-danger-outline btn-xs">
+              Vaciar Nube
+            </button>
+          </div>
+        </div>
+
+        <p style="font-size:0.82rem; color:var(--text-muted);">
+          Canal inseguro donde residen los paquetes criptográficos transmitidos. Los 3 compañeros comparten este repositorio en tiempo real.
+        </p>
+
+        <!-- Tabla de Archivos en Drive -->
+        <div style="overflow-x:auto;">
+          <table class="cloud-table">
+            <thead>
+              <tr>
+                <th>Archivo</th>
+                <th>Autor Declarado</th>
+                <th>Cifrado (AES)</th>
+                <th>Firma (RSA)</th>
+                <th>Estado de Integridad</th>
+                <th>Fecha Subida</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="drive-table-body">
+              <tr>
+                <td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">
+                  No hay archivos en la nube. Ve a la pestaña de Alicia o Candy para subir uno.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         PESTAÑA 6: GUÍA DE PRÁCTICA Y VIDEO (INCISOS A-G)
+         ======================================================== -->
+    <div id="view-guide" class="tab-content-panel">
+      <div class="role-card" style="width:100%; max-width:960px; margin:0 auto;">
+        <div class="role-card-header">
+          <h2><span>📋</span> Guía de Práctica para el Video (Máx 17 Min)</h2>
+          <span class="role-badge badge-green">ESCOM - Dra. Nidia Cortez</span>
+        </div>
+
+        <div class="checklist-card">
+          <div class="checklist-item">
+            <span class="checklist-letter">A</span>
+            <div>
+              <strong>Alicia cifra y firma mensaje para Betito y lo guarda en la nube:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Alicia", seleccionar ambos servicios, escribir mensaje, presionar botón enviar y mostrar consola de detalles.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">B</span>
+            <div>
+              <strong>Candy cifra y firma mensaje para Betito y lo guarda en la nube:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Candy", redactar mensaje propio, cifrar, firmar y subir.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">C</span>
+            <div>
+              <strong>Candy altera los archivos en la nube, duplica uno de ellos teniendo 3 archivos y los renombra x, y, z:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En la pestaña Candy presionar "Inciso C: Duplicar archivo y renombrar a x, y, z". Verificar en la Nube que existen los 3 archivos.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">D</span>
+            <div>
+              <strong>Betito indica quién es el autor de cada archivo (x, y, z) y muestra el contenido:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Betito", seleccionar secuencialmente x, y, z. Observar detección automática del autor (Alicia vs Candy) y semáforo de servicios.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">E</span>
+            <div>
+              <strong>Hacer que falle el servicio de Integridad [Candy] y Betito debe mostrar que falla:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy, seleccionar un archivo y presionar "Inciso E: Alterar Integridad". Luego Betito lo descifra y muestra ☹️ y marca roja en Integridad.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">F</span>
+            <div>
+              <strong>Corregir para que vuelva a funcionar [Candy] y Betito muestra verificación correcta:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy presionar "Inciso F: Corregir". Betito vuelve a verificar y obtiene 😃 y marcas verdes ✅.</span>
+            </div>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-letter">G</span>
+            <div>
+              <strong>Conclusiones individuales finales:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Dejar de compartir pantalla y exponer conclusiones de confidencialidad, integridad, autenticación y no repudio.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal / Inspector de Estaciones del Diagrama -->
+  <div id="inspector-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div id="modal-icon" class="modal-icon">🔍</div>
+          <h2 id="modal-title" class="modal-title">Inspección de Nodo</h2>
+        </div>
+        <button id="modal-close" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-content"></div>
+      <div class="modal-footer">
+        <button id="modal-btn-action" class="btn btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Referencias Criptográficas (Requisito Pág. 3) -->
+  <div id="refs-modal" class="modal-backdrop">
+    <div class="modal-window" style="max-width:700px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">📚</div>
+          <h2 class="modal-title">Referencias Técnicas y Algoritmos Criptográficos</h2>
+        </div>
+        <button id="refs-modal-close" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="line-height:1.6; font-size:0.9rem; color:#cbd5e1; display:flex; flex-direction:column; gap:1rem;">
+        <p>
+          En estricto apego al requisito de la <strong>Dra. Nidia Cortez (Pág. 3 del PDF)</strong>: <em>"Se puede hacer uso de funciones existentes, sin embargo, deberán estar bien referenciadas"</em>, a continuación se detallan las normas técnicas y bibliografía implementadas:
+        </p>
+
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.9rem;">
+          <h4 style="color:var(--accent-cyan); margin-bottom:0.3rem;">1. Intercambio de Llaves Diffie-Hellman (MODP)</h4>
+          <p style="font-size:0.84rem;">
+            • <strong>Referencia:</strong> Diffie, W., & Hellman, M. (1976). <em>"New Directions in Cryptography"</em>. IEEE Transactions on Information Theory, 22(6), 644-654.<br>
+            • <strong>Norma:</strong> IETF RFC 3526 / RFC 2409 (More Modular Exponential (MODP) Diffie-Hellman groups for Internet Key Exchange - Group 2 de 1024 bits, primo seguro $p$ y generador $g=2$).<br>
+            • <strong>Uso en práctica:</strong> Cálculo modular de $K_a = g^a \pmod p$, $K_b = g^b \pmod p$, $K = K_b^a \pmod p$ y vector $IV = K_d^c \pmod p$.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:0.9rem;">
+          <h4 style="color:var(--accent-amber); margin-bottom:0.3rem;">2. Cifrado Simétrico por Bloques AES-CBC</h4>
+          <p style="font-size:0.84rem;">
+            • <strong>Referencia:</strong> NIST FIPS PUB 197: <em>"Advanced Encryption Standard (AES)"</em>, National Institute of Standards and Technology, 2001.<br>
+            • <strong>Modo de operación:</strong> NIST SP 800-38A: <em>"Recommendation for Block Cipher Modes of Operation: Methods and Techniques"</em> (Modo CBC con vector IV de 128 bits y relleno PKCS#7).<br>
+            • <strong>Servicio ofrecido:</strong> Confidencialidad para datos de cualquier longitud.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(59,130,246,0.25); border-radius:8px; padding:0.9rem;">
+          <h4 style="color:#60a5fa; margin-bottom:0.3rem;">3. Función Resumen Criptográfica SHA-256 (Embudo)</h4>
+          <p style="font-size:0.84rem;">
+            • <strong>Referencia:</strong> NIST FIPS PUB 180-4: <em>"Secure Hash Standard (SHS)"</em>, National Institute of Standards and Technology, 2015.<br>
+            • <strong>Salida:</strong> Digest de 256 bits (32 bytes) irreversible y resistente a colisiones.<br>
+            • <strong>Servicio ofrecido:</strong> Integridad de los datos.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(236,72,153,0.25); border-radius:8px; padding:0.9rem;">
+          <h4 style="color:var(--accent-pink); margin-bottom:0.3rem;">4. Firma Digital Asimétrica RSA (RSASSA-PKCS1-v1_5)</h4>
+          <p style="font-size:0.84rem;">
+            • <strong>Referencia:</strong> IETF RFC 8017 / PKCS #1 v2.2: <em>"RSA Cryptography Specifications Version 2.2"</em>.<br>
+            • <strong>Longitud de clave:</strong> Módulo $n$ de 2048 bits con exponente público $e = 65537$ ($0x010001$). Formato estándar SPKI / PEM (RFC 7468).<br>
+            • <strong>Servicio ofrecido:</strong> Autenticación del emisor y No Repudio.
+          </p>
+        </div>
+
+        <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.9rem;">
+          <h4 style="color:var(--accent-green); margin-bottom:0.3rem;">5. Motor de Ejecución: W3C Web Cryptography API</h4>
+          <p style="font-size:0.84rem;">
+            • <strong>Estándar:</strong> W3C Recommendation: <em>"Web Cryptography API"</em> (`window.crypto.subtle`), garantizando generación de entropía segura por hardware (`crypto.getRandomValues`) y ejecución criptográfica en espacio protegido de memoria.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="refs-modal-btn-close" class="btn btn-primary">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="crypto-engine.js"></script>
+  <script src="cloud-storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
