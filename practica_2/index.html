@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Curvas ElÃ­pticas sobre ð”½â‚š | Explorador Interactivo</title>
+  <title>Curvas Elípticas sobre 𝔽ₚ | Explorador Interactivo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,41 +14,42 @@
   <div class="app-container">
     <header class="header">
       <div class="brand">
-        <span class="badge">CriptografÃ­a & GeometrÃ­a Algebraica</span>
-        <h1>Curvas ElÃ­pticas sobre ð”½â‚š</h1>
-        <p class="subtitle">EcuaciÃ³n de Weierstrass corta: <code>yÂ² â‰¡ xÂ³ + ax + b (mod p)</code></p>
+        <span class="badge">Criptografía &amp; Geometría Algebraica</span>
+        <h1>Curvas Elípticas sobre 𝔽<sub>p</sub></h1>
+        <p class="subtitle">Ecuación de Weierstrass corta: <code>y² ≡ x³ + ax + b (mod p)</code></p>
       </div>
 
       <div class="preset-pills">
-        <span class="preset-label">Presets:</span>`n        <a href="../index.html" class="pill-btn" style="text-decoration:none;">&larr; Portal</a>
-        <button type="button" class="pill-btn active" data-a="4" data-b="4" data-p="11">yÂ² â‰¡ xÂ³ + 4x + 4 (mod 11)</button>
-        <button type="button" class="pill-btn" data-a="1" data-b="1" data-p="23">yÂ² â‰¡ xÂ³ + x + 1 (mod 23)</button>
-        <button type="button" class="pill-btn" data-a="2" data-b="3" data-p="97">yÂ² â‰¡ xÂ³ + 2x + 3 (mod 97)</button>
+        <a href="../index.html" class="pill-btn" style="text-decoration:none;">&larr; Portal</a>
+        <span class="preset-label">Presets:</span>
+        <button type="button" class="pill-btn active" data-a="4" data-b="4" data-p="11">y² ≡ x³ + 4x + 4 (mod 11)</button>
+        <button type="button" class="pill-btn" data-a="1" data-b="1" data-p="23">y² ≡ x³ + x + 1 (mod 23)</button>
+        <button type="button" class="pill-btn" data-a="2" data-b="3" data-p="97">y² ≡ x³ + 2x + 3 (mod 97)</button>
         <button type="button" class="pill-btn danger-pill" data-a="0" data-b="0" data-p="11">Singular: a=0, b=0 (mod 11)</button>
       </div>
     </header>
 
     <main class="main-grid">
-      <!-- Panel de Control y ConfiguraciÃ³n -->
+      <!-- Panel de Control y Configuración -->
       <section class="card controls-card">
-        <h2 class="card-title">ParÃ¡metros de la Curva</h2>
+        <h2 class="card-title">Parámetros de la Curva</h2>
         <form id="curve-form" class="form-grid">
           <div class="input-group">
             <label for="input-a">Coeficiente <em>a</em></label>
             <input type="number" id="input-a" value="4" required>
-            <span class="input-hint">TÃ©rmino lineal</span>
+            <span class="input-hint">Término lineal</span>
           </div>
 
           <div class="input-group">
             <label for="input-b">Coeficiente <em>b</em></label>
             <input type="number" id="input-b" value="4" required>
-            <span class="input-hint">TÃ©rmino independiente</span>
+            <span class="input-hint">Término independiente</span>
           </div>
 
           <div class="input-group">
             <label for="input-p">Primo <em>p</em></label>
             <input type="number" id="input-p" value="11" min="3" max="1009" required>
-            <span class="input-hint">MÃ³dulo (campo finito ð”½â‚š)</span>
+            <span class="input-hint">Módulo (campo finito 𝔽<sub>p</sub>)</span>
           </div>
 
           <div class="form-actions">
@@ -59,33 +61,33 @@
         <div id="p-warning" class="warning-banner hidden"></div>
       </section>
 
-      <!-- Panel de VerificaciÃ³n de Singularidad -->
+      <!-- Panel de Verificación de Singularidad -->
       <section class="card verification-card">
-        <h2 class="card-title">VerificaciÃ³n de Singularidad</h2>
+        <h2 class="card-title">Verificación de Singularidad</h2>
         <div class="formula-box">
-          <div class="formula-label">CondiciÃ³n de Suavidad:</div>
-          <div class="formula-code">4aÂ³ + 27bÂ² â‰¢ 0 (mod p)</div>
+          <div class="formula-label">Condición de Suavidad:</div>
+          <div class="formula-code">4a³ + 27b² ≢ 0 (mod p)</div>
         </div>
 
         <div id="disc-breakdown" class="disc-breakdown">
-          <!-- DinÃ¡mico en app.js -->
+          <!-- Dinámico en app.js -->
         </div>
 
         <div id="disc-status" class="status-banner">
-          <!-- DinÃ¡mico en app.js -->
+          <!-- Dinámico en app.js -->
         </div>
       </section>
 
-      <!-- Resumen MÃ©tricas y Cota de Hasse -->
+      <!-- Resumen Métricas y Cota de Hasse -->
       <section class="card metrics-card">
         <div class="metric-item">
           <span class="metric-label">Puntos Finitos</span>
           <span id="metric-affine-count" class="metric-val">--</span>
         </div>
         <div class="metric-item highlight">
-          <span class="metric-label">Orden del Grupo #E(ð”½â‚š)</span>
+          <span class="metric-label">Orden del Grupo #E(𝔽<sub>p</sub>)</span>
           <span id="metric-group-order" class="metric-val">--</span>
-          <span class="metric-sub">Incluye punto al infinito ð’ª</span>
+          <span class="metric-sub">Incluye punto al infinito 𝒪</span>
         </div>
         <div class="metric-item">
           <span class="metric-label">Cota de Hasse</span>
@@ -94,16 +96,16 @@
         </div>
       </section>
 
-      <!-- VisualizaciÃ³n GrÃ¡fica Discreta -->
+      <!-- Visualización Gráfica Discreta -->
       <section class="card canvas-card">
         <div class="card-header-flex">
           <div>
-            <h2 class="card-title">Espacio AfÃ­n ð”½â‚š Ã— ð”½â‚š</h2>
-            <p class="card-desc">SimetrÃ­a respecto al eje central y = p / 2</p>
+            <h2 class="card-title">Espacio Afín 𝔽<sub>p</sub> &times; 𝔽<sub>p</sub></h2>
+            <p class="card-desc">Simetría respecto al eje central y = p / 2</p>
           </div>
           <div class="canvas-legend">
             <span class="legend-item"><span class="legend-dot point-dot"></span> Puntos</span>
-            <span class="legend-item"><span class="legend-line sym-line"></span> Eje simetrÃ­a</span>
+            <span class="legend-item"><span class="legend-line sym-line"></span> Eje simetría</span>
           </div>
         </div>
 
@@ -117,11 +119,11 @@
       <section class="card table-card">
         <div class="card-header-flex">
           <div>
-            <h2 class="card-title">CÃ¡lculo de Puntos Paso a Paso</h2>
-            <p class="card-desc">EvaluaciÃ³n para cada x âˆˆ {0, ..., p - 1}</p>
+            <h2 class="card-title">Cálculo de Puntos Paso a Paso</h2>
+            <p class="card-desc">Evaluación para cada x &isin; {0, ..., p - 1}</p>
           </div>
           <div class="table-actions">
-            <button type="button" id="btn-copy-points" class="btn secondary-btn">Copiar Conjunto E(ð”½â‚š)</button>
+            <button type="button" id="btn-copy-points" class="btn secondary-btn">Copiar Conjunto E(𝔽<sub>p</sub>)</button>
           </div>
         </div>
 
@@ -130,9 +132,9 @@
             <thead>
               <tr>
                 <th>x</th>
-                <th>xÂ³ + ax + b</th>
+                <th>x³ + ax + b</th>
                 <th>RHS mod p</th>
-                <th>Â¿Residuo CuadrÃ¡tico?</th>
+                <th>¿Residuo Cuadrático?</th>
                 <th>Soluciones y</th>
                 <th>Puntos (x, y)</th>
               </tr>
@@ -146,7 +148,7 @@
     </main>
 
     <footer class="footer">
-      <p>Calculadora de Curvas ElÃ­pticas Finitas &bull; Algoritmo determinista mod p &bull; EcuaciÃ³n simÃ©trica y â‰¡ p - y</p>
+      <p>Calculadora de Curvas Elípticas Finitas &bull; Algoritmo determinista mod p &bull; Ecuación simétrica y ≡ p - y</p>
     </footer>
   </div>
 

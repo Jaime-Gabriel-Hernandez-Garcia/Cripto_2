@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrÃ¡ctica CriptografÃ­a HÃ­brida - ESCOM IPN</title>
+  <title>Práctica Criptografía Híbrida - ESCOM IPN</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,24 +17,24 @@
     <div class="logo-badge">
       <div class="logo-icon">CH</div>
       <div>
-        <h1>CriptografÃ­a HÃ­brida</h1>
+        <h1>Criptografía Híbrida</h1>
         <div class="subtitle">ESCOM IPN &bull; Lab Dra. Nidia Cortez</div>
       </div>
     </div>
-    <div class="btn-group">`n      <a href="../index.html" class="btn btn-secondary" style="text-decoration:none;" title="Volver al Portal">&larr; Portal</a>
-      <button id="btn-crypto-refs" class="btn btn-secondary" title="Ver referencias y normativas criptogrÃ¡ficas (NIST, RFC)">
+    <div class="btn-group">
+      <button id="btn-crypto-refs" class="btn btn-secondary" title="Ver referencias y normativas criptográficas (NIST, RFC)">
         Referencias Normativas
       </button>
-      <button id="btn-export-keys" class="btn btn-secondary" title="Descargar paquete de llaves pÃºblicas del equipo">
+      <button id="btn-export-keys" class="btn btn-secondary" title="Descargar paquete de llaves públicas del equipo">
         Descargar Llaves PEM
       </button>
       <button id="btn-quick-guide" class="btn btn-secondary">
-        GuÃ­a Incisos
+        Guía Incisos
       </button>
     </div>
   </header>
 
-  <!-- Barra de PestaÃ±as Multi-Rol Minimalista -->
+  <!-- Barra de Pestañas Multi-Rol Minimalista -->
   <nav class="nav-tabs" id="main-nav-tabs">
     <button class="tab-btn active" data-tab="view-diagram">Diagrama Interactivo</button>
     <button class="tab-btn tab-alicia" data-tab="view-alicia">Alicia (Emisor 1)</button>
@@ -43,40 +43,40 @@
     <button class="tab-btn" data-tab="view-drive">
       Nube Drive <span id="drive-badge-count" class="role-badge badge-blue" style="margin-left:4px; font-size:10px;">0</span>
     </button>
-    <button class="tab-btn" data-tab="view-guide">GuÃ­a Video (A-G)</button>
+    <button class="tab-btn" data-tab="view-guide">Guía Video (A-G)</button>
   </nav>
 
   <!-- Contenedor Principal de Vistas -->
   <main>
 
     <!-- ========================================================
-         PESTAÃ‘A 1: DIAGRAMA INTERACTIVO (SIMULADOR VISUAL)
+         PESTAÑA 1: DIAGRAMA INTERACTIVO (SIMULADOR VISUAL)
          ======================================================== -->
     <div id="view-diagram" class="tab-content-panel active">
       <!-- Barra de controles del diagrama -->
       <section class="control-bar" style="border-radius:12px; margin-bottom:1rem;">
         <div class="input-group">
           <label for="input-message">Mensaje en Diagrama (m):</label>
-          <input type="text" id="input-message" class="message-input" value="Â¡Hola Betito! Este mensaje es confidencial y autÃ©ntico." placeholder="Escribe un mensaje para cifrar..." maxlength="120">
+          <input type="text" id="input-message" class="message-input" value="¡Hola Betito! Este mensaje es confidencial y auténtico." placeholder="Escribe un mensaje para cifrar..." maxlength="120">
         </div>
 
-        <div class="btn-group">`n      <a href="../index.html" class="btn btn-secondary" style="text-decoration:none;" title="Volver al Portal">&larr; Portal</a>
+        <div class="btn-group">
           <button id="btn-play" class="btn btn-primary">
-            <span id="play-icon">â–¶</span> <span id="play-text">Iniciar Flujo</span>
+            <span id="play-icon">▶</span> <span id="play-text">Iniciar Flujo</span>
           </button>
           <button id="btn-step" class="btn btn-secondary">
-            <span>â­</span> Paso a Paso
+            <span>⏭</span> Paso a Paso
           </button>
           <button id="btn-reset" class="btn btn-secondary">
-            <span>ðŸ”„</span> Reiniciar
+            <span>🔄</span> Reiniciar
           </button>
-          <button id="btn-tamper" class="btn btn-danger-outline" title="Simular alteraciÃ³n de paquete en la nube">
-            <span>âš¡</span> Alterar Paquete
+          <button id="btn-tamper" class="btn btn-danger-outline" title="Simular alteración de paquete en la nube">
+            <span>⚡</span> Alterar Paquete
           </button>
         </div>
 
         <div class="speed-control">
-          <span>â± Pausa/Paso:</span>
+          <span>⏱ Pausa/Paso:</span>
           <select id="select-speed">
             <option value="4000">4 seg</option>
             <option value="3000" selected>3 seg</option>
@@ -166,7 +166,7 @@
             <text x="328" y="166" class="label-math">IV = S = Kc^d mod n</text>
             <text x="328" y="186" class="label-math">d = &lt;secret&gt;</text>
             <text x="328" y="202" class="label-math">Kd = g^d mod n</text>
-            <text x="230" y="222" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">ðŸ” Clic para inspeccionar matemÃ¡ticas DH</text>
+            <text x="230" y="222" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">🔍 Clic para inspeccionar matemáticas DH</text>
           </g>
 
           <!-- TITULARES -->
@@ -225,10 +225,10 @@
             <text x="65" y="-8" text-anchor="middle" font-weight="700" font-size="18" fill="#ec4899">m (Alicia)</text>
             <foreignObject x="5" y="8" width="120" height="104">
               <div xmlns="http://www.w3.org/1999/xhtml" class="diagram-doc-box">
-                <textarea id="diagram-msg-input" class="diagram-msg-textarea" placeholder="Escribe aquÃ­ tu mensaje m...">Â¡Hola Betito! Este mensaje es confidencial y autÃ©ntico.</textarea>
+                <textarea id="diagram-msg-input" class="diagram-msg-textarea" placeholder="Escribe aquí tu mensaje m...">¡Hola Betito! Este mensaje es confidencial y auténtico.</textarea>
               </div>
             </foreignObject>
-            <text x="65" y="132" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">âœï¸ Escribe aquÃ­</text>
+            <text x="65" y="132" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">✍️ Escribe aquí</text>
           </g>
 
           <g id="station-alice-aes" class="station-node" data-station="alice-aes" transform="translate(200, 230)">
@@ -271,7 +271,7 @@
           <!-- NUBE -->
           <g id="station-cloud" class="station-node" data-station="cloud" transform="translate(520, 360)">
             <path class="node-shape" d="M 30,80 C 0,80 -15,45 20,30 C 25,5 75,-5 95,15 C 115,-2 160,5 160,35 C 185,35 190,80 150,80 Z" fill="rgba(30, 41, 59, 0.7)" stroke="#38bdf8" stroke-width="2.5" />
-            <text x="90" y="48" text-anchor="middle" font-size="24">â˜ï¸</text>
+            <text x="90" y="48" text-anchor="middle" font-size="24">☁️</text>
             <text x="90" y="70" text-anchor="middle" class="label-badge" fill="#94a3b8" font-size="11">Canal Inseguro</text>
             <text x="90" y="100" text-anchor="middle" class="station-hint" fill="#38bdf8" font-size="10">Inspeccionar Red</text>
           </g>
@@ -321,7 +321,7 @@
             <text x="35" y="35" text-anchor="middle" font-weight="700" font-size="14" fill="#f8fafc">RSA</text>
             <g transform="translate(18, 40)">
               <path d="M 15,10 C 15,4 20,0 26,0 C 32,0 37,4 37,10 C 37,14 34,18 30,19 L 30,35 L 26,39 L 26,33 L 22,33 L 22,27 L 30,27 L 30,19 C 26,18 15,14 15,10 Z" fill="#f8fafc" stroke="#ec4899" stroke-width="1.5" filter="drop-shadow(0 0 5px #ec4899)" />
-              <text x="44" y="24" class="label-math" fill="#38bdf8" font-weight="700">A<tspan font-size="8" dy="2">PÃºblica</tspan></text>
+              <text x="44" y="24" class="label-math" fill="#38bdf8" font-weight="700">A<tspan font-size="8" dy="2">Pública</tspan></text>
             </g>
             <g transform="translate(100, 16)">
               <rect class="node-shape" x="0" y="0" width="85" height="28" rx="4" fill="#0284c7" />
@@ -334,32 +334,32 @@
             <path id="comparator-diamond" class="node-shape" d="M 0,-30 L 30,0 L 0,30 L -30,0 Z" />
             <text x="0" y="6" text-anchor="middle" font-size="20" font-weight="800" fill="#f8fafc">=</text>
             <g id="icon-happy" opacity="0.3" transform="translate(-5, 45)">
-              <text x="0" y="0" font-size="26">ðŸ˜ƒ</text>
+              <text x="0" y="0" font-size="26">😃</text>
             </g>
             <g id="icon-sad" opacity="0.3" transform="translate(-5, -55)">
-              <text x="0" y="0" font-size="26">â˜¹ï¸</text>
+              <text x="0" y="0" font-size="26">☹️</text>
             </g>
-            <text x="0" y="78" text-anchor="middle" class="station-hint" fill="#10b981" font-size="10">ComparaciÃ³n</text>
+            <text x="0" y="78" text-anchor="middle" class="station-hint" fill="#10b981" font-size="10">Comparación</text>
           </g>
 
           <!-- CHECKLIST SEGURIDAD -->
           <g id="security-checklist" transform="translate(1160, 615)">
             <text id="chk-conf" x="0" y="0" class="security-list-item">Confidencialidad</text>
             <text id="chk-integ" x="0" y="20" class="security-list-item">Integridad de Datos</text>
-            <text id="chk-auth" x="0" y="40" class="security-list-item">AutenticaciÃ³n</text>
+            <text id="chk-auth" x="0" y="40" class="security-list-item">Autenticación</text>
             <text id="chk-nonrep" x="0" y="60" class="security-list-item">No repudio</text>
-            <text id="chk-badge" x="145" y="40" font-size="22" opacity="0.2">âœ…</text>
+            <text id="chk-badge" x="145" y="40" font-size="22" opacity="0.2">✅</text>
           </g>
         </svg>
       </div>
     </div>
 
     <!-- ========================================================
-         PESTAÃ‘A 2: ALICIA (EMISOR 1)
+         PESTAÑA 2: ALICIA (EMISOR 1)
          ======================================================== -->
     <div id="view-alicia" class="tab-content-panel">
       <div class="role-grid">
-        <!-- Formulario de EnvÃ­o de Alicia -->
+        <!-- Formulario de Envío de Alicia -->
         <div class="role-card card-pink">
           <div class="role-card-header">
             <h2>Alicia (Emisor 1)</h2>
@@ -368,7 +368,7 @@
 
           <!-- Manejo de Llaves -->
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-            <span style="font-size:0.8rem; color:var(--text-muted);">Llave pÃºblica de Alicia:</span>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Llave pública de Alicia:</span>
             <button id="btn-download-alicia-key" class="btn btn-secondary btn-xs">
               Descargar alicia_public.pem
             </button>
@@ -376,11 +376,11 @@
 
           <!-- Selector de Servicios: Cifrado y/o Firma -->
           <div class="service-selector-box">
-            <div class="service-selector-title">Servicios CriptogrÃ¡ficos (Alicia):</div>
+            <div class="service-selector-title">Servicios Criptográficos (Alicia):</div>
             <div class="checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" id="alicia-opt-cipher" checked>
-                <span>Cifrado SimÃ©trico (AES-CBC + DH)</span>
+                <span>Cifrado Simétrico (AES-CBC + DH)</span>
               </label>
               <label class="checkbox-label">
                 <input type="checkbox" id="alicia-opt-sign" checked>
@@ -392,7 +392,7 @@
           <!-- Mensaje m -->
           <div class="input-group" style="flex-direction:column; align-items:flex-start;">
             <label for="alicia-msg-input" style="color:var(--text-muted); font-size:0.8rem;">Mensaje para Betito:</label>
-            <textarea id="alicia-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Alicia...">Â¡Hola Betito! Este mensaje es confidencial y autÃ©ntico de parte de Alicia.</textarea>
+            <textarea id="alicia-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Alicia...">¡Hola Betito! Este mensaje es confidencial y auténtico de parte de Alicia.</textarea>
           </div>
 
           <!-- Nombre del archivo en la nube -->
@@ -401,26 +401,26 @@
             <input type="text" id="alicia-filename-input" class="message-input" value="mensaje_alicia" style="padding:0.35rem 0.6rem; flex:1;">
           </div>
 
-          <!-- BotÃ³n de EnvÃ­o -->
+          <!-- Botón de Envío -->
           <button id="btn-alicia-send" class="btn btn-primary" style="padding:0.55rem; font-size:0.84rem;">
             Cifrar, Firmar y Subir (Inciso A)
           </button>
         </div>
 
-        <!-- Consola de Detalles de OperaciÃ³n de Alicia -->
+        <!-- Consola de Detalles de Operación de Alicia -->
         <div class="role-card">
           <div class="role-card-header">
-            <h3>Operaciones CriptogrÃ¡ficas (Alicia)</h3>
-            <span class="role-badge badge-pink">InspecciÃ³n</span>
+            <h3>Operaciones Criptográficas (Alicia)</h3>
+            <span class="role-badge badge-pink">Inspección</span>
           </div>
           <div class="op-console-container">
             <div class="console-header-bar">
-              <span>BitÃ¡cora MatemÃ¡tica en Tiempo Real</span>
+              <span>Bitácora Matemática en Tiempo Real</span>
               <span>SHA-256 &bull; DH-MODP &bull; AES-128</span>
             </div>
             <div id="alicia-console" class="op-console">
-[+] Esperando inicio de operaciÃ³n de Alicia (Inciso A)...
-AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y firma digital RSA.
+[+] Esperando inicio de operación de Alicia (Inciso A)...
+Aquí se mostrarán parámetros Ka y Kc, clave K_AES, digest SHA-256 y firma digital RSA.
             </div>
           </div>
         </div>
@@ -428,7 +428,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     </div>
 
     <!-- ========================================================
-         PESTAÃ‘A 3: CANDY (EMISOR 2 Y ATAQUE)
+         PESTAÑA 3: CANDY (EMISOR 2 Y ATAQUE)
          ======================================================== -->
     <div id="view-candy" class="tab-content-panel">
       <div class="role-grid">
@@ -441,24 +441,24 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
             </button>
           </div>
 
-          <!-- Switch Segmentado Minimalista: EnvÃ­o vs Ataque -->
+          <!-- Switch Segmentado Minimalista: Envío vs Ataque -->
           <div class="segmented-control">
             <button type="button" class="segment-pill pill-purple active" id="btn-tab-candy-send">
-              EnvÃ­o LegÃ­timo (Inciso B)
+              Envío Legítimo (Inciso B)
             </button>
             <button type="button" class="segment-pill pill-red" id="btn-tab-candy-attack">
               Laboratorio Ataques (Incisos C, E, F)
             </button>
           </div>
 
-          <!-- PANEL 1: EnvÃ­o LegÃ­timo de Candy -->
+          <!-- PANEL 1: Envío Legítimo de Candy -->
           <div id="candy-panel-send" style="display:flex; flex-direction:column; gap:0.85rem;">
             <div class="service-selector-box">
-              <div class="service-selector-title">Servicios CriptogrÃ¡ficos (Candy):</div>
+              <div class="service-selector-title">Servicios Criptográficos (Candy):</div>
               <div class="checkbox-group">
                 <label class="checkbox-label">
                   <input type="checkbox" id="candy-opt-cipher" checked>
-                  <span>Cifrado SimÃ©trico (AES-CBC + DH)</span>
+                  <span>Cifrado Simétrico (AES-CBC + DH)</span>
                 </label>
                 <label class="checkbox-label">
                   <input type="checkbox" id="candy-opt-sign" checked>
@@ -469,7 +469,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
 
             <div class="input-group" style="flex-direction:column; align-items:flex-start;">
               <label for="candy-msg-input" style="color:var(--text-muted); font-size:0.8rem;">Mensaje para Betito:</label>
-              <textarea id="candy-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Candy...">Â¡Hola Betito! Mensaje firmado y cifrado legÃ­timamente por Candy.</textarea>
+              <textarea id="candy-msg-input" class="message-input" style="width:100%; min-height:68px;" placeholder="Escribe el mensaje de Candy...">¡Hola Betito! Mensaje firmado y cifrado legítimamente por Candy.</textarea>
             </div>
 
             <div style="display:flex; gap:0.6rem; align-items:center;">
@@ -486,7 +486,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
           <div id="candy-panel-attack" style="display:none; flex-direction:column; gap:0.75rem;">
             <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:6px; padding:0.8rem; display:flex; flex-direction:column; gap:0.65rem;">
               <div style="font-size:0.78rem; color:var(--accent-rose); font-weight:600;">
-                ManipulaciÃ³n en Canal Inseguro (Nube Drive):
+                Manipulación en Canal Inseguro (Nube Drive):
               </div>
 
               <!-- Inciso C -->
@@ -499,7 +499,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
 
               <!-- Inciso E -->
               <div class="workflow-step">
-                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">2. AlteraciÃ³n de Integridad (Inciso E):</span>
+                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">2. Alteración de Integridad (Inciso E):</span>
                 <div style="display:flex; gap:0.4rem; align-items:center;">
                   <select id="select-tamper-target" class="message-input" style="padding:0.35rem; flex:1; font-size:0.78rem;">
                     <option value="">Seleccionar archivo a alterar...</option>
@@ -512,7 +512,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
 
               <!-- Inciso F -->
               <div class="workflow-step">
-                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">3. RestauraciÃ³n de Integridad (Inciso F):</span>
+                <span style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">3. Restauración de Integridad (Inciso F):</span>
                 <div style="display:flex; gap:0.4rem; align-items:center;">
                   <select id="select-repair-target" class="message-input" style="padding:0.35rem; flex:1; font-size:0.78rem;">
                     <option value="">Seleccionar archivo alterado...</option>
@@ -529,16 +529,16 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
         <!-- Consola de Detalles de Candy -->
         <div class="role-card">
           <div class="role-card-header">
-            <h3>Operaciones CriptogrÃ¡ficas (Candy)</h3>
-            <span class="role-badge badge-purple">InspecciÃ³n</span>
+            <h3>Operaciones Criptográficas (Candy)</h3>
+            <span class="role-badge badge-purple">Inspección</span>
           </div>
           <div class="op-console-container">
             <div class="console-header-bar">
-              <span>BitÃ¡cora de EmisiÃ³n y ManipulaciÃ³n</span>
+              <span>Bitácora de Emisión y Manipulación</span>
               <span>SHA-256 &bull; DH-MODP &bull; AES-128</span>
             </div>
             <div id="candy-console" class="op-console">
-[+] Esperando acciÃ³n de Candy (Inciso B, C, E o F)...
+[+] Esperando acción de Candy (Inciso B, C, E o F)...
             </div>
           </div>
         </div>
@@ -546,11 +546,11 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     </div>
 
     <!-- ========================================================
-         PESTAÃ‘A 4: BETITO (RECEPTOR Y VERIFICACIÃ“N)
+         PESTAÑA 4: BETITO (RECEPTOR Y VERIFICACIÓN)
          ======================================================== -->
     <div id="view-betito" class="tab-content-panel">
       <div class="role-grid">
-        <!-- Panel de VerificaciÃ³n de Betito -->
+        <!-- Panel de Verificación de Betito -->
         <div class="role-card card-blue">
           <div class="role-card-header">
             <h2>Betito (Receptor)</h2>
@@ -582,16 +582,16 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
               <button id="btn-load-web-candy" class="btn btn-secondary btn-xs" title="Cargar candy_public.pem">
                 Web Candy
               </button>
-              <button id="btn-reset-key-mode" class="btn btn-secondary btn-xs" title="Restaurar detecciÃ³n automÃ¡tica">
+              <button id="btn-reset-key-mode" class="btn btn-secondary btn-xs" title="Restaurar detección automática">
                 Auto
               </button>
             </div>
             <div id="betito-key-status" style="margin-top:0.3rem; font-size:0.75rem; color:var(--accent); font-weight:500;">
-              DetecciÃ³n automÃ¡tica de llaves activada.
+              Detección automática de llaves activada.
             </div>
           </div>
 
-          <!-- PASO 2: MenÃº de Procesos (PÃ¡g. 3) -->
+          <!-- PASO 2: Menú de Procesos (Pág. 3) -->
           <div class="service-selector-box">
             <div class="service-selector-title">
               <span class="role-badge badge-blue">Paso 2</span>
@@ -604,24 +604,24 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
               </label>
               <label class="checkbox-label">
                 <input type="checkbox" id="betito-opt-verify" checked>
-                <span>VerificaciÃ³n (RSA-SHA256)</span>
+                <span>Verificación (RSA-SHA256)</span>
               </label>
             </div>
           </div>
 
-          <!-- BotÃ³n de EjecuciÃ³n -->
+          <!-- Botón de Ejecución -->
           <button id="btn-betito-process" class="btn btn-primary" style="padding:0.55rem; font-size:0.84rem;">
             Procesar Archivo Seleccionado (Inciso D)
           </button>
 
-          <!-- PASO 3: Resultados y SemÃ¡foro de Servicios -->
+          <!-- PASO 3: Resultados y Semáforo de Servicios -->
           <div id="betito-results-card" class="results-panel">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Autor Identificado:</span>
               <span id="betito-detected-author" class="role-badge badge-blue">Ninguno</span>
             </div>
 
-            <!-- SemÃ¡foro Tipo MÃ©trica de 4 Servicios -->
+            <!-- Semáforo Tipo Métrica de 4 Servicios -->
             <div class="services-metric-grid">
               <div id="badge-svc-conf" class="metric-pill badge-red">
                 <span>Confidencialidad</span> <span>PENDIENTE</span>
@@ -630,7 +630,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
                 <span>Integridad</span> <span>PENDIENTE</span>
               </div>
               <div id="badge-svc-auth" class="metric-pill badge-red">
-                <span>AutenticaciÃ³n</span> <span>PENDIENTE</span>
+                <span>Autenticación</span> <span>PENDIENTE</span>
               </div>
               <div id="badge-svc-nonrep" class="metric-pill badge-red">
                 <span>No Repudio</span> <span>PENDIENTE</span>
@@ -638,7 +638,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
             </div>
 
             <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.2rem 0;">
-              <span id="betito-face-icon" style="font-size:1.4rem;">ðŸ˜</span>
+              <span id="betito-face-icon" style="font-size:1.4rem;">😐</span>
               <span id="betito-verdict-text" style="font-size:0.8rem; font-weight:500; color:#cbd5e1;">Selecciona un archivo y presiona Procesar.</span>
             </div>
 
@@ -652,12 +652,12 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
         <!-- Consola de Detalles de Betito -->
         <div class="role-card">
           <div class="role-card-header">
-            <h3>Operaciones CriptogrÃ¡ficas (Betito)</h3>
+            <h3>Operaciones Criptográficas (Betito)</h3>
             <span class="role-badge badge-blue">Traza en Vivo</span>
           </div>
           <div class="op-console-container">
             <div class="console-header-bar">
-              <span>BitÃ¡cora de Descifrado y VerificaciÃ³n</span>
+              <span>Bitácora de Descifrado y Verificación</span>
               <span>SHA-256 &bull; DH-MODP &bull; RSA</span>
             </div>
             <div id="betito-console" class="op-console">
@@ -669,13 +669,13 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     </div>
 
     <!-- ========================================================
-         PESTAÃ‘A 5: NUBE (DRIVE COMPARTIDO)
+         PESTAÑA 5: NUBE (DRIVE COMPARTIDO)
          ======================================================== -->
     <div id="view-drive" class="tab-content-panel">
       <div class="role-card" style="width:100%;">
         <div class="role-card-header">
           <h2>Repositorio Central de la Nube (Drive)</h2>
-          <div class="btn-group">`n      <a href="../index.html" class="btn btn-secondary" style="text-decoration:none;" title="Volver al Portal">&larr; Portal</a>
+          <div class="btn-group">
             <button id="btn-drive-clear" class="btn btn-danger-outline btn-xs">
               Vaciar Nube
             </button>
@@ -683,7 +683,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
         </div>
 
         <p style="font-size:0.82rem; color:var(--text-muted);">
-          Canal inseguro donde residen los paquetes criptogrÃ¡ficos transmitidos. Los 3 compaÃ±eros comparten este repositorio en tiempo real.
+          Canal inseguro donde residen los paquetes criptográficos transmitidos. Los 3 compañeros comparten este repositorio en tiempo real.
         </p>
 
         <!-- Tabla de Archivos en Drive -->
@@ -703,7 +703,7 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
             <tbody id="drive-table-body">
               <tr>
                 <td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">
-                  No hay archivos en la nube. Ve a la pestaÃ±a de Alicia o Candy para subir uno.
+                  No hay archivos en la nube. Ve a la pestaña de Alicia o Candy para subir uno.
                 </td>
               </tr>
             </tbody>
@@ -713,12 +713,12 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     </div>
 
     <!-- ========================================================
-         PESTAÃ‘A 6: GUÃA DE PRÃCTICA Y VIDEO (INCISOS A-G)
+         PESTAÑA 6: GUÍA DE PRÁCTICA Y VIDEO (INCISOS A-G)
          ======================================================== -->
     <div id="view-guide" class="tab-content-panel">
       <div class="role-card" style="width:100%; max-width:960px; margin:0 auto;">
         <div class="role-card-header">
-          <h2><span>ðŸ“‹</span> GuÃ­a de PrÃ¡ctica para el Video (MÃ¡x 17 Min)</h2>
+          <h2><span>📋</span> Guía de Práctica para el Video (Máx 17 Min)</h2>
           <span class="role-badge badge-green">ESCOM - Dra. Nidia Cortez</span>
         </div>
 
@@ -727,49 +727,49 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
             <span class="checklist-letter">A</span>
             <div>
               <strong>Alicia cifra y firma mensaje para Betito y lo guarda en la nube:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaÃ±a "Alicia", seleccionar ambos servicios, escribir mensaje, presionar botÃ³n enviar y mostrar consola de detalles.</span>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Alicia", seleccionar ambos servicios, escribir mensaje, presionar botón enviar y mostrar consola de detalles.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">B</span>
             <div>
               <strong>Candy cifra y firma mensaje para Betito y lo guarda en la nube:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaÃ±a "Candy", redactar mensaje propio, cifrar, firmar y subir.</span>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Candy", redactar mensaje propio, cifrar, firmar y subir.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">C</span>
             <div>
               <strong>Candy altera los archivos en la nube, duplica uno de ellos teniendo 3 archivos y los renombra x, y, z:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">En la pestaÃ±a Candy presionar "Inciso C: Duplicar archivo y renombrar a x, y, z". Verificar en la Nube que existen los 3 archivos.</span>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En la pestaña Candy presionar "Inciso C: Duplicar archivo y renombrar a x, y, z". Verificar en la Nube que existen los 3 archivos.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">D</span>
             <div>
-              <strong>Betito indica quiÃ©n es el autor de cada archivo (x, y, z) y muestra el contenido:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaÃ±a "Betito", seleccionar secuencialmente x, y, z. Observar detecciÃ³n automÃ¡tica del autor (Alicia vs Candy) y semÃ¡foro de servicios.</span>
+              <strong>Betito indica quién es el autor de cada archivo (x, y, z) y muestra el contenido:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Ir a pestaña "Betito", seleccionar secuencialmente x, y, z. Observar detección automática del autor (Alicia vs Candy) y semáforo de servicios.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">E</span>
             <div>
               <strong>Hacer que falle el servicio de Integridad [Candy] y Betito debe mostrar que falla:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy, seleccionar un archivo y presionar "Inciso E: Alterar Integridad". Luego Betito lo descifra y muestra â˜¹ï¸ y marca roja en Integridad.</span>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy, seleccionar un archivo y presionar "Inciso E: Alterar Integridad". Luego Betito lo descifra y muestra ☹️ y marca roja en Integridad.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">F</span>
             <div>
-              <strong>Corregir para que vuelva a funcionar [Candy] y Betito muestra verificaciÃ³n correcta:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy presionar "Inciso F: Corregir". Betito vuelve a verificar y obtiene ðŸ˜ƒ y marcas verdes âœ….</span>
+              <strong>Corregir para que vuelva a funcionar [Candy] y Betito muestra verificación correcta:</strong><br>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">En Candy presionar "Inciso F: Corregir". Betito vuelve a verificar y obtiene 😃 y marcas verdes ✅.</span>
             </div>
           </div>
           <div class="checklist-item">
             <span class="checklist-letter">G</span>
             <div>
               <strong>Conclusiones individuales finales:</strong><br>
-              <span style="color:var(--text-secondary); font-size:0.85rem;">Dejar de compartir pantalla y exponer conclusiones de confidencialidad, integridad, autenticaciÃ³n y no repudio.</span>
+              <span style="color:var(--text-secondary); font-size:0.85rem;">Dejar de compartir pantalla y exponer conclusiones de confidencialidad, integridad, autenticación y no repudio.</span>
             </div>
           </div>
         </div>
@@ -783,8 +783,8 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title-group">
-          <div id="modal-icon" class="modal-icon">ðŸ”</div>
-          <h2 id="modal-title" class="modal-title">InspecciÃ³n de Nodo</h2>
+          <div id="modal-icon" class="modal-icon">🔍</div>
+          <h2 id="modal-title" class="modal-title">Inspección de Nodo</h2>
         </div>
         <button id="modal-close" class="modal-close">&times;</button>
       </div>
@@ -795,61 +795,61 @@ AquÃ­ se mostrarÃ¡n parÃ¡metros Ka y Kc, clave K_AES, digest SHA-256 y fir
     </div>
   </div>
 
-  <!-- Modal de Referencias CriptogrÃ¡ficas (Requisito PÃ¡g. 3) -->
+  <!-- Modal de Referencias Criptográficas (Requisito Pág. 3) -->
   <div id="refs-modal" class="modal-backdrop">
     <div class="modal-window" style="max-width:700px;">
       <div class="modal-header">
         <div class="modal-title-group">
-          <div class="modal-icon">ðŸ“š</div>
-          <h2 class="modal-title">Referencias TÃ©cnicas y Algoritmos CriptogrÃ¡ficos</h2>
+          <div class="modal-icon">📚</div>
+          <h2 class="modal-title">Referencias Técnicas y Algoritmos Criptográficos</h2>
         </div>
         <button id="refs-modal-close" class="modal-close">&times;</button>
       </div>
       <div class="modal-body" style="line-height:1.6; font-size:0.9rem; color:#cbd5e1; display:flex; flex-direction:column; gap:1rem;">
         <p>
-          En estricto apego al requisito de la <strong>Dra. Nidia Cortez (PÃ¡g. 3 del PDF)</strong>: <em>"Se puede hacer uso de funciones existentes, sin embargo, deberÃ¡n estar bien referenciadas"</em>, a continuaciÃ³n se detallan las normas tÃ©cnicas y bibliografÃ­a implementadas:
+          En estricto apego al requisito de la <strong>Dra. Nidia Cortez (Pág. 3 del PDF)</strong>: <em>"Se puede hacer uso de funciones existentes, sin embargo, deberán estar bien referenciadas"</em>, a continuación se detallan las normas técnicas y bibliografía implementadas:
         </p>
 
         <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.9rem;">
           <h4 style="color:var(--accent-cyan); margin-bottom:0.3rem;">1. Intercambio de Llaves Diffie-Hellman (MODP)</h4>
           <p style="font-size:0.84rem;">
-            â€¢ <strong>Referencia:</strong> Diffie, W., & Hellman, M. (1976). <em>"New Directions in Cryptography"</em>. IEEE Transactions on Information Theory, 22(6), 644-654.<br>
-            â€¢ <strong>Norma:</strong> IETF RFC 3526 / RFC 2409 (More Modular Exponential (MODP) Diffie-Hellman groups for Internet Key Exchange - Group 2 de 1024 bits, primo seguro $p$ y generador $g=2$).<br>
-            â€¢ <strong>Uso en prÃ¡ctica:</strong> CÃ¡lculo modular de $K_a = g^a \pmod p$, $K_b = g^b \pmod p$, $K = K_b^a \pmod p$ y vector $IV = K_d^c \pmod p$.
+            • <strong>Referencia:</strong> Diffie, W., & Hellman, M. (1976). <em>"New Directions in Cryptography"</em>. IEEE Transactions on Information Theory, 22(6), 644-654.<br>
+            • <strong>Norma:</strong> IETF RFC 3526 / RFC 2409 (More Modular Exponential (MODP) Diffie-Hellman groups for Internet Key Exchange - Group 2 de 1024 bits, primo seguro $p$ y generador $g=2$).<br>
+            • <strong>Uso en práctica:</strong> Cálculo modular de $K_a = g^a \pmod p$, $K_b = g^b \pmod p$, $K = K_b^a \pmod p$ y vector $IV = K_d^c \pmod p$.
           </p>
         </div>
 
         <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:0.9rem;">
-          <h4 style="color:var(--accent-amber); margin-bottom:0.3rem;">2. Cifrado SimÃ©trico por Bloques AES-CBC</h4>
+          <h4 style="color:var(--accent-amber); margin-bottom:0.3rem;">2. Cifrado Simétrico por Bloques AES-CBC</h4>
           <p style="font-size:0.84rem;">
-            â€¢ <strong>Referencia:</strong> NIST FIPS PUB 197: <em>"Advanced Encryption Standard (AES)"</em>, National Institute of Standards and Technology, 2001.<br>
-            â€¢ <strong>Modo de operaciÃ³n:</strong> NIST SP 800-38A: <em>"Recommendation for Block Cipher Modes of Operation: Methods and Techniques"</em> (Modo CBC con vector IV de 128 bits y relleno PKCS#7).<br>
-            â€¢ <strong>Servicio ofrecido:</strong> Confidencialidad para datos de cualquier longitud.
+            • <strong>Referencia:</strong> NIST FIPS PUB 197: <em>"Advanced Encryption Standard (AES)"</em>, National Institute of Standards and Technology, 2001.<br>
+            • <strong>Modo de operación:</strong> NIST SP 800-38A: <em>"Recommendation for Block Cipher Modes of Operation: Methods and Techniques"</em> (Modo CBC con vector IV de 128 bits y relleno PKCS#7).<br>
+            • <strong>Servicio ofrecido:</strong> Confidencialidad para datos de cualquier longitud.
           </p>
         </div>
 
         <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(59,130,246,0.25); border-radius:8px; padding:0.9rem;">
-          <h4 style="color:#60a5fa; margin-bottom:0.3rem;">3. FunciÃ³n Resumen CriptogrÃ¡fica SHA-256 (Embudo)</h4>
+          <h4 style="color:#60a5fa; margin-bottom:0.3rem;">3. Función Resumen Criptográfica SHA-256 (Embudo)</h4>
           <p style="font-size:0.84rem;">
-            â€¢ <strong>Referencia:</strong> NIST FIPS PUB 180-4: <em>"Secure Hash Standard (SHS)"</em>, National Institute of Standards and Technology, 2015.<br>
-            â€¢ <strong>Salida:</strong> Digest de 256 bits (32 bytes) irreversible y resistente a colisiones.<br>
-            â€¢ <strong>Servicio ofrecido:</strong> Integridad de los datos.
+            • <strong>Referencia:</strong> NIST FIPS PUB 180-4: <em>"Secure Hash Standard (SHS)"</em>, National Institute of Standards and Technology, 2015.<br>
+            • <strong>Salida:</strong> Digest de 256 bits (32 bytes) irreversible y resistente a colisiones.<br>
+            • <strong>Servicio ofrecido:</strong> Integridad de los datos.
           </p>
         </div>
 
         <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(236,72,153,0.25); border-radius:8px; padding:0.9rem;">
-          <h4 style="color:var(--accent-pink); margin-bottom:0.3rem;">4. Firma Digital AsimÃ©trica RSA (RSASSA-PKCS1-v1_5)</h4>
+          <h4 style="color:var(--accent-pink); margin-bottom:0.3rem;">4. Firma Digital Asimétrica RSA (RSASSA-PKCS1-v1_5)</h4>
           <p style="font-size:0.84rem;">
-            â€¢ <strong>Referencia:</strong> IETF RFC 8017 / PKCS #1 v2.2: <em>"RSA Cryptography Specifications Version 2.2"</em>.<br>
-            â€¢ <strong>Longitud de clave:</strong> MÃ³dulo $n$ de 2048 bits con exponente pÃºblico $e = 65537$ ($0x010001$). Formato estÃ¡ndar SPKI / PEM (RFC 7468).<br>
-            â€¢ <strong>Servicio ofrecido:</strong> AutenticaciÃ³n del emisor y No Repudio.
+            • <strong>Referencia:</strong> IETF RFC 8017 / PKCS #1 v2.2: <em>"RSA Cryptography Specifications Version 2.2"</em>.<br>
+            • <strong>Longitud de clave:</strong> Módulo $n$ de 2048 bits con exponente público $e = 65537$ ($0x010001$). Formato estándar SPKI / PEM (RFC 7468).<br>
+            • <strong>Servicio ofrecido:</strong> Autenticación del emisor y No Repudio.
           </p>
         </div>
 
         <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.9rem;">
-          <h4 style="color:var(--accent-green); margin-bottom:0.3rem;">5. Motor de EjecuciÃ³n: W3C Web Cryptography API</h4>
+          <h4 style="color:var(--accent-green); margin-bottom:0.3rem;">5. Motor de Ejecución: W3C Web Cryptography API</h4>
           <p style="font-size:0.84rem;">
-            â€¢ <strong>EstÃ¡ndar:</strong> W3C Recommendation: <em>"Web Cryptography API"</em> (`window.crypto.subtle`), garantizando generaciÃ³n de entropÃ­a segura por hardware (`crypto.getRandomValues`) y ejecuciÃ³n criptogrÃ¡fica en espacio protegido de memoria.
+            • <strong>Estándar:</strong> W3C Recommendation: <em>"Web Cryptography API"</em> (`window.crypto.subtle`), garantizando generación de entropía segura por hardware (`crypto.getRandomValues`) y ejecución criptográfica en espacio protegido de memoria.
           </p>
         </div>
       </div>
