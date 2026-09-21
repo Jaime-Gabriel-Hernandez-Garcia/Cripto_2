@@ -1,36 +1,23 @@
-# Práctica: Criptografía Híbrida
+﻿# Laboratorio de Criptografía
 
-Sistema interactivo de Criptografía Híbrida para el laboratorio de criptografía de la Escuela Superior de Cómputo (ESCOM - IPN).
+Repositorio de prácticas de criptografía y seguridad informática.
 
-## Arquitectura Criptográfica (Esquema 2)
+## Índice de Prácticas
 
-1. **Intercambio de Llaves Diffie-Hellman (MODP)**:
-   - Grupo MODP 2 (1024 bits, primo RFC 3526 / RFC 2409, generador $g=2$).
-   - Derivación matemática de secreto compartido $K = K_b^a \pmod p$ y vector $IV = K_d^c \pmod p$.
-   - KDF basado en SHA-256 para derivar clave simétrica $K_{AES}$ (16 bytes) e $IV$ (16 bytes).
+- **[Práctica 1: Criptografía Híbrida](./practica_1/)**
+  - Diffie-Hellman (ECDH/DH)
+  - Cifrado simétrico AES-GCM
+  - Firma y verificación RSA
+  - Simulación de almacenamiento en nube con chunks cifrados
 
-2. **Cifrado Simétrico AES-CBC**:
-   - AES-128 en modo CBC con relleno PKCS#7 (NIST FIPS 197 / NIST SP 800-38A).
-   - Servicio: **Confidencialidad**.
+- **[Práctica 2: Curvas Elípticas sobre $\mathbb{F}_p$](./practica_2/)**
+  - Ecuación corta de Weierstrass: ^2 \equiv x^3 + ax + b \pmod p$
+  - Verificación de no singularidad: ^3 + 27b^2 \not\equiv 0 \pmod p$
+  - Búsqueda exhaustiva de puntos afines
+  - Conteo de orden $\#E(\mathbb{F}_p)$ con $\mathcal{O}$ y cota de Hasse
+  - Gráfico interactivo en espacio discreto $\mathbb{F}_p \times \mathbb{F}_p$
 
-3. **Función Resumen Criptográfica SHA-256**:
-   - NIST FIPS PUB 180-4 (digest de 256 bits).
-   - Servicio: **Integridad**.
+- **Práctica 3**: *Próximamente*
 
-4. **Firma Digital RSA**:
-   - RSASSA-PKCS1-v1_5 con clave de 2048 bits y exponente $e=65537$ (RFC 8017).
-   - Importación y exportación de llaves públicas en formato PEM (RFC 7468 / SPKI).
-   - Servicios: **Autenticación** y **No Repudio**.
-
-## Roles Implementados
-
-- **Diagrama Interactivo**: Visualización gráfica del protocolo, flujo paso a paso e inspector de nodos.
-- **Alicia (Emisor 1)**: Cifrado y firma de mensajes legítimos con guardado en nube.
-- **Candy (Emisor 2 / Ataque)**: Emisión legítima y laboratorio de ataques en nube (duplicación x/y/z, alteración de integridad y restauración).
-- **Betito (Receptor)**: Menú de selección de procesos (1 o 2 de 2), selector dinámico de llaves PEM / Web y semáforo de verificación de servicios.
-- **Nube (Drive Compartido)**: Canal inseguro centralizado para la transmisión de paquetes cifrados.
-
-## Estilo y Diseño
-
-- Interfaz minimalista de alto contraste tipo Swiss / Linear Dark OLED.
-- Cero dependencias externas complejas; compatible con navegadores modernos a través de la W3C Web Cryptography API.
+---
+Acceso web directo: Abrir index.html en la raíz para navegar entre las prácticas interactivas.
