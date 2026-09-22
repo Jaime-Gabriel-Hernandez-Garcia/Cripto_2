@@ -96,6 +96,50 @@
         </div>
       </section>
 
+      <!-- Operaciones de Grupo: Suma y Doblado de Puntos -->
+      <section class="card addition-card" id="addition-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Ley de Grupo: Suma y Doblado de Puntos</h2>
+            <p class="card-desc">Operaciones aritméticas sobre E(𝔽<sub>p</sub>): P + Q = R &bull; Doblado: 2P = R</p>
+          </div>
+          <div class="op-hint">
+            <span>Tip: Haz clic en un punto de la tabla o del plano para seleccionarlo</span>
+          </div>
+        </div>
+
+        <div class="operation-controls">
+          <div class="op-point-selector">
+            <div class="point-badge-wrap">
+              <span class="point-tag p-tag">P</span>
+              <select id="select-point-p" class="select-point"></select>
+            </div>
+            <span class="op-math-sym">+</span>
+            <div class="point-badge-wrap">
+              <span class="point-tag q-tag">Q</span>
+              <select id="select-point-q" class="select-point"></select>
+            </div>
+            <span class="op-math-sym">=</span>
+            <div class="result-badge-wrap">
+              <span class="point-tag r-tag">R</span>
+              <span id="display-point-r" class="display-result-point">--</span>
+            </div>
+          </div>
+
+          <div class="op-buttons-bar">
+            <button type="button" id="btn-op-add" class="btn primary-btn">Sumar P + Q</button>
+            <button type="button" id="btn-op-double-p" class="btn secondary-btn">Doblar 2P</button>
+            <button type="button" id="btn-op-double-q" class="btn secondary-btn">Doblar 2Q</button>
+            <button type="button" id="btn-op-inv-p" class="btn ghost-btn">Inverso &minus;P</button>
+            <button type="button" id="btn-op-inv-q" class="btn ghost-btn">Inverso &minus;Q</button>
+          </div>
+        </div>
+
+        <div id="op-result-breakdown" class="op-breakdown">
+          <!-- Desglose paso a paso generado dinámicamente -->
+        </div>
+      </section>
+
       <!-- Visualización Gráfica Discreta -->
       <section class="card canvas-card">
         <div class="card-header-flex">
@@ -105,6 +149,9 @@
           </div>
           <div class="canvas-legend">
             <span class="legend-item"><span class="legend-dot point-dot"></span> Puntos</span>
+            <span class="legend-item"><span class="legend-dot point-p-dot"></span> P</span>
+            <span class="legend-item"><span class="legend-dot point-q-dot"></span> Q</span>
+            <span class="legend-item"><span class="legend-dot point-r-dot"></span> R</span>
             <span class="legend-item"><span class="legend-line sym-line"></span> Eje simetría</span>
           </div>
         </div>
@@ -148,7 +195,7 @@
     </main>
 
     <footer class="footer">
-      <p>Calculadora de Curvas Elípticas Finitas &bull; Algoritmo determinista mod p &bull; Ecuación simétrica y ≡ p - y</p>
+      <p>Calculadora de Curvas Elípticas Finitas &bull; Aritmética de grupo completa &bull; Ecuación simétrica y ≡ p - y</p>
     </footer>
   </div>
 

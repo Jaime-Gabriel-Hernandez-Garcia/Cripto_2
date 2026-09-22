@@ -15,7 +15,8 @@ Repositorio de prácticas de criptografía y seguridad informática para la Escu
   - Verificación de no singularidad: $4a^3 + 27b^2 \not\equiv 0 \pmod p$
   - Búsqueda exhaustiva de puntos afines
   - Conteo de orden: $|E(\mathbb{F}_p)|$ con $\mathcal{O}$ y cota de Hasse
-  - Gráfico interactivo en espacio discreto $\mathbb{F}_p \times \mathbb{F}_p$
+  - Ley de grupo: Suma ordinaria ($P + Q = R$) y Doblado ($2P = R$) con inversos modulares
+  - Gráfico interactivo en espacio discreto $\mathbb{F}_p \times \mathbb{F}_p$ con secante y reflexión
 
 - **Práctica 3**: *Próximamente*
 
