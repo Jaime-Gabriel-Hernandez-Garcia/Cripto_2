@@ -53,7 +53,8 @@
           </div>
 
           <div class="form-actions">
-            <button type="submit" id="btn-calculate" class="btn primary-btn">Calcular Puntos</button>
+            <button type="submit" id="btn-calculate" class="btn primary-btn">Validar y Calcular Curva</button>
+            <button type="button" id="btn-validate-only" class="btn secondary-btn">Validar Curva</button>
             <button type="button" id="btn-reset" class="btn ghost-btn">Reiniciar</button>
           </div>
         </form>
@@ -85,14 +86,19 @@
           <span id="metric-affine-count" class="metric-val">--</span>
         </div>
         <div class="metric-item highlight">
-          <span class="metric-label">Orden del Grupo #E(𝔽<sub>p</sub>)</span>
+          <span class="metric-label">Cardinalidad #E(𝔽<sub>p</sub>)</span>
           <span id="metric-group-order" class="metric-val">--</span>
-          <span class="metric-sub">Incluye punto al infinito 𝒪</span>
+          <span class="metric-sub">Orden del grupo (con 𝒪)</span>
         </div>
         <div class="metric-item">
           <span class="metric-label">Cota de Hasse</span>
           <span id="metric-hasse" class="metric-val">--</span>
           <span id="metric-hasse-status" class="metric-sub">--</span>
+        </div>
+        <div class="metric-item highlight">
+          <span class="metric-label">Puntos Generadores</span>
+          <span id="metric-gen-count" class="metric-val">--</span>
+          <span id="metric-gen-status" class="metric-sub">--</span>
         </div>
       </section>
 
@@ -188,6 +194,212 @@
             </thead>
             <tbody id="points-tbody">
               <!-- Renderizado en app.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Operación: Multiplicación Escalar k · P -->
+      <section class="card scalar-card" id="scalar-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Multiplicación Escalar: k &bull; P</h2>
+            <p class="card-desc">Cálculo mediante el Algoritmo Double-and-Add (Doblado y Suma binaria)</p>
+          </div>
+          <div class="op-hint">
+            <span>Tip: Ingresa cualquier escalar entero k &ge; 0</span>
+          </div>
+        </div>
+
+        <div class="operation-controls">
+          <div class="op-point-selector">
+            <div class="scalar-input-wrap">
+              <label for="input-scalar-k" class="scalar-label">Escalar <em>k</em>:</label>
+              <input type="number" id="input-scalar-k" class="input-scalar" value="2" min="0" step="1">
+            </div>
+            <span class="op-math-sym">&bull;</span>
+            <div class="point-badge-wrap">
+              <span class="point-tag p-tag">P</span>
+              <select id="select-scalar-p" class="select-point"></select>
+            </div>
+            <span class="op-math-sym">=</span>
+            <div class="result-badge-wrap">
+              <span class="point-tag r-tag">kP</span>
+              <span id="display-scalar-result" class="display-result-point">--</span>
+            </div>
+          </div>
+
+          <div class="op-buttons-bar">
+            <button type="button" id="btn-scalar-calc" class="btn primary-btn">Calcular k &bull; P</button>
+            <button type="button" id="btn-scalar-prev" class="btn secondary-btn">&minus;1 (k&minus;1)</button>
+            <button type="button" id="btn-scalar-next" class="btn secondary-btn">+1 (k+1)</button>
+            <button type="button" id="btn-scalar-order" class="btn secondary-btn">k = N (Orden)</button>
+            <button type="button" id="btn-scalar-double" class="btn ghost-btn">k = 2 (Doble)</button>
+          </div>
+        </div>
+
+        <div id="scalar-result-breakdown" class="op-breakdown">
+          <!-- Desglose paso a paso generado dinámicamente -->
+        </div>
+      </section>
+
+      <!-- Puntos Generadores de la Curva -->
+      <section class="card generators-card" id="generators-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Identificación y Listado de Puntos Generadores</h2>
+            <p class="card-desc">Puntos G &isin; E(𝔽<sub>p</sub>) con orden ord(G) = #E(𝔽<sub>p</sub>), generando todo el grupo elíptico &lang;G&rang; = E(𝔽<sub>p</sub>)</p>
+          </div>
+          <div class="generators-stats">
+            <span id="gen-count-badge" class="badge">-- Generadores</span>
+            <span id="gen-cyclic-badge" class="badge">Grupo Cíclico</span>
+          </div>
+        </div>
+
+        <div id="generators-summary-box" class="formula-box">
+          <!-- Resumen de estructura de grupo: cardinalidad, generadores teóricos phi(N) -->
+        </div>
+
+        <div class="generators-container" style="margin-top: 1rem;">
+          <h3 class="subheading">Puntos Generadores Detectados:</h3>
+          <div id="generators-list" class="generators-badge-grid">
+            <!-- Badges de puntos generadores -->
+          </div>
+        </div>
+
+        <div class="generators-table-section">
+          <div class="card-header-flex" style="margin-top: 0.75rem; margin-bottom: 0.5rem;">
+            <h3 class="subheading">Órdenes y Subgrupos Generados por Cada Punto:</h3>
+            <div class="filter-actions">
+              <button type="button" id="btn-filter-all-orders" class="pill-btn active">Todos los Puntos</button>
+              <button type="button" id="btn-filter-only-gen" class="pill-btn">Solo Generadores</button>
+            </div>
+          </div>
+          <div class="table-container orders-table-container">
+            <table class="points-table" id="orders-table">
+              <thead>
+                <tr>
+                  <th>Punto P</th>
+                  <th>Orden ord(P)</th>
+                  <th>¿Es Generador?</th>
+                  <th>Subgrupo Generado &lang;P&rang;</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody">
+                <!-- Renderizado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabla de Suma de Puntos (Tabla de Cayley) -->
+      <section class="card cayley-card" id="cayley-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Tabla de Suma de Puntos (Tabla de Cayley)</h2>
+            <p class="card-desc">Matriz de adición completa P<sub>i</sub> + P<sub>j</sub> sobre el grupo abeliano E(𝔽<sub>p</sub>)</p>
+          </div>
+          <div class="table-actions">
+            <button type="button" id="btn-print-cayley" class="btn primary-btn">🖨️ Imprimir Tabla de Suma</button>
+            <button type="button" id="btn-copy-cayley-csv" class="btn secondary-btn">Copiar CSV</button>
+          </div>
+        </div>
+
+        <div id="cayley-overflow-notice" class="warning-banner hidden"></div>
+
+        <div class="table-container matrix-table-container" id="cayley-table-wrapper">
+          <table class="points-table matrix-table" id="cayley-table">
+            <!-- Renderizado dinámicamente -->
+          </table>
+        </div>
+      </section>
+
+      <!-- Tabla de Multiplicación Escalar -->
+      <section class="card scalar-table-card" id="scalar-table-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Tabla de Multiplicación Escalar</h2>
+            <p class="card-desc">Múltiplos k &bull; P para todos los puntos P &isin; E(𝔽<sub>p</sub>) y escalares k &isin; {1, 2, ..., #E(𝔽<sub>p</sub>)}</p>
+          </div>
+          <div class="table-actions">
+            <button type="button" id="btn-print-scalar-table" class="btn primary-btn">🖨️ Imprimir Tabla de Multiplicación</button>
+            <button type="button" id="btn-copy-scalar-csv" class="btn secondary-btn">Copiar CSV</button>
+          </div>
+        </div>
+
+        <div id="scalar-overflow-notice" class="warning-banner hidden"></div>
+
+        <div class="table-container matrix-table-container" id="scalar-table-wrapper">
+          <table class="points-table matrix-table" id="scalar-multiplication-table">
+            <!-- Renderizado dinámicamente -->
+          </table>
+        </div>
+      </section>
+
+      <!-- Comparativa de Seguridad: Curvas Elípticas vs RSA -->
+      <section class="card rsa-card" id="rsa-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title">Equivalencia de Seguridad: Curvas Elípticas vs RSA</h2>
+            <p class="card-desc">Comparativa de longitud de clave según estándares NIST SP 800-57 y BSI</p>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="points-table">
+            <thead>
+              <tr>
+                <th>Nivel de Seguridad (bits)</th>
+                <th>Curva Elíptica (ECC)</th>
+                <th>RSA</th>
+                <th>Ratio Tamaño (RSA / ECC)</th>
+                <th>Curvas Estándar Ejemplares</th>
+                <th>Uso Común</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>80 bits</strong> (Legado)</td>
+                <td>160 bits</td>
+                <td>1024 bits</td>
+                <td>6.4x</td>
+                <td>secp160r1</td>
+                <td>Desaprobado</td>
+              </tr>
+              <tr>
+                <td><strong>112 bits</strong></td>
+                <td>224 bits</td>
+                <td>2048 bits</td>
+                <td>9.1x</td>
+                <td>NIST P-224</td>
+                <td>Sistemas legados</td>
+              </tr>
+              <tr>
+                <td><strong style="color:var(--accent-emerald);">128 bits</strong> (Estándar recomendado)</td>
+                <td><strong style="color:var(--accent-cyan);">256 bits</strong></td>
+                <td>3072 bits</td>
+                <td><strong>12.0x</strong></td>
+                <td>secp256k1, NIST P-256, Curve25519</td>
+                <td>TLS 1.3, Bitcoin, SSH, Signal</td>
+              </tr>
+              <tr>
+                <td><strong>192 bits</strong> (Alto)</td>
+                <td>384 bits</td>
+                <td>7680 bits</td>
+                <td>20.0x</td>
+                <td>NIST P-384</td>
+                <td>Gubernamental Top Secret</td>
+              </tr>
+              <tr>
+                <td><strong>256 bits</strong> (Máximo)</td>
+                <td>512 - 521 bits</td>
+                <td>15360 bits</td>
+                <td><strong>29.5x</strong></td>
+                <td>NIST P-521, Curve448</td>
+                <td>Seguridad a muy largo plazo</td>
+              </tr>
             </tbody>
           </table>
         </div>

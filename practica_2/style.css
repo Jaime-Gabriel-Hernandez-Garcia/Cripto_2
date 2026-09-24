@@ -372,12 +372,18 @@ body {
 .metrics-card {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   padding: 1.25rem 1.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .metrics-card {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
   .metrics-card {
     grid-template-columns: 1fr;
   }
@@ -565,6 +571,7 @@ body {
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
   margin-right: 0.35rem;
+}
 /* Group Addition & Doubling Card */
 .addition-card {
   grid-column: 1 / -1;
@@ -775,3 +782,219 @@ body {
   padding: 1rem 0 2rem;
   border-top: 1px solid var(--border-color);
 }
+
+/* Complementary Cards spanning full width */
+.scalar-card,
+.generators-card,
+.cayley-card,
+.scalar-table-card,
+.rsa-card {
+  grid-column: 1 / -1;
+}
+
+/* Scalar input controls */
+.scalar-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scalar-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.input-scalar {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  width: 90px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input-scalar:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+/* Generators section */
+.generators-stats {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.generators-badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.badge-generator {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.badge-generator:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.badge-order-tag {
+  background: rgba(0, 0, 0, 0.35);
+  color: #a7f3d0;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+.subheading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.4rem;
+}
+
+.orders-table-container {
+  max-height: 380px;
+}
+
+/* Matrix Table (Cayley & Scalar) */
+.matrix-table-container {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.matrix-table th {
+  background: #151e30;
+  font-size: 0.8rem;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border: 1px solid var(--border-color);
+}
+
+.matrix-table th.sticky-col {
+  left: 0;
+  z-index: 3;
+  background: #151e30;
+}
+
+.matrix-table td {
+  text-align: center;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(34, 48, 73, 0.5);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.matrix-table td:hover {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.matrix-table td.cell-identity {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.matrix-table tr.highlight-row {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt;
+    padding: 0;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    gap: 1rem !important;
+  }
+
+  .preset-pills,
+  .form-actions,
+  .op-buttons-bar,
+  .table-actions,
+  .canvas-card,
+  .btn,
+  .warning-banner,
+  .filter-actions {
+    display: none !important;
+  }
+
+  .card {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title,
+  .metric-val,
+  h1 {
+    color: #000000 !important;
+    -webkit-text-fill-color: initial !important;
+  }
+
+  .points-table,
+  .matrix-table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .points-table th,
+  .matrix-table th,
+  .points-table td,
+  .matrix-table td {
+    border: 1px solid #999999 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+    font-size: 8pt !important;
+    padding: 3px 5px !important;
+  }
+
+  .matrix-table th {
+    background: #f0f0f0 !important;
+  }
+
+  .matrix-table td.cell-identity {
+    font-weight: bold !important;
+    background: #e6f4ea !important;
+  }
+}
+

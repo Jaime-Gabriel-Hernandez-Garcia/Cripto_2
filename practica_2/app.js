@@ -39,12 +39,27 @@ function isPrime(n) {
   return true;
 }
 
+// Función Indicatriz de Euler φ(n) para cálculo de generadores teóricos en grupos cíclicos
+function eulerPhi(n) {
+  let result = n;
+  let temp = n;
+  for (let p = 2; p * p <= temp; p++) {
+    if (temp % p === 0) {
+      while (temp % p === 0) temp = Math.floor(temp / p);
+      result -= Math.floor(result / p);
+    }
+  }
+  if (temp > 1) result -= Math.floor(result / temp);
+  return result;
+}
+
 // Estado de la aplicación
 const state = {
   a: 4,
   b: 4,
   p: 11,
   points: [],
+  allGroupPoints: [], // ['INF', ...points]
   discriminant: 0,
   isSingular: false,
   hoveredPoint: null,
@@ -52,7 +67,24 @@ const state = {
   pointQ: null, // { x, y } o 'INF'
   pointR: null, // { x, y } o 'INF'
   lastOp: null,
-  nextSelectTarget: 'P' // 'P' o 'Q' para alternar clics
+  nextSelectTarget: 'P', // 'P' o 'Q' para alternar clics
+
+  // Multiplicación Escalar k · P
+  scalarK: 2,
+  scalarPoint: null,
+  scalarResult: null,
+
+  // Generadores y órdenes de puntos
+  generators: [],
+  pointOrdersData: [],
+  isCyclic: false,
+  phiN: 0,
+  maxOrder: 1,
+  ordersFilter: 'all', // 'all' o 'only-gen'
+
+  // Tablas
+  cayleyMatrix: [],
+  scalarMultiplicationData: []
 };
 
 // Elementos DOM
@@ -62,6 +94,7 @@ const dom = {
   inputB: document.getElementById('input-b'),
   inputP: document.getElementById('input-p'),
   btnReset: document.getElementById('btn-reset'),
+  btnValidateOnly: document.getElementById('btn-validate-only'),
   btnCopy: document.getElementById('btn-copy-points'),
   pWarning: document.getElementById('p-warning'),
   discBreakdown: document.getElementById('disc-breakdown'),
@@ -70,6 +103,8 @@ const dom = {
   metricOrder: document.getElementById('metric-group-order'),
   metricHasse: document.getElementById('metric-hasse'),
   metricHasseStatus: document.getElementById('metric-hasse-status'),
+  metricGenCount: document.getElementById('metric-gen-count'),
+  metricGenStatus: document.getElementById('metric-gen-status'),
   pointsTableBody: document.getElementById('points-tbody'),
   canvas: document.getElementById('curve-canvas'),
   tooltip: document.getElementById('canvas-tooltip'),
@@ -84,7 +119,39 @@ const dom = {
   btnOpDoubleQ: document.getElementById('btn-op-double-q'),
   btnOpInvP: document.getElementById('btn-op-inv-p'),
   btnOpInvQ: document.getElementById('btn-op-inv-q'),
-  opBreakdown: document.getElementById('op-result-breakdown')
+  opBreakdown: document.getElementById('op-result-breakdown'),
+
+  // Multiplicación Escalar
+  inputScalarK: document.getElementById('input-scalar-k'),
+  selectScalarP: document.getElementById('select-scalar-p'),
+  displayScalarResult: document.getElementById('display-scalar-result'),
+  btnScalarCalc: document.getElementById('btn-scalar-calc'),
+  btnScalarPrev: document.getElementById('btn-scalar-prev'),
+  btnScalarNext: document.getElementById('btn-scalar-next'),
+  btnScalarOrder: document.getElementById('btn-scalar-order'),
+  btnScalarDouble: document.getElementById('btn-scalar-double'),
+  scalarBreakdown: document.getElementById('scalar-result-breakdown'),
+
+  // Generadores
+  genCountBadge: document.getElementById('gen-count-badge'),
+  genCyclicBadge: document.getElementById('gen-cyclic-badge'),
+  generatorsSummaryBox: document.getElementById('generators-summary-box'),
+  generatorsList: document.getElementById('generators-list'),
+  btnFilterAllOrders: document.getElementById('btn-filter-all-orders'),
+  btnFilterOnlyGen: document.getElementById('btn-filter-only-gen'),
+  ordersTbody: document.getElementById('orders-tbody'),
+
+  // Tabla de Suma (Cayley)
+  btnPrintCayley: document.getElementById('btn-print-cayley'),
+  btnCopyCayleyCsv: document.getElementById('btn-copy-cayley-csv'),
+  cayleyTable: document.getElementById('cayley-table'),
+  cayleyNotice: document.getElementById('cayley-overflow-notice'),
+
+  // Tabla de Multiplicación Escalar
+  btnPrintScalarTable: document.getElementById('btn-print-scalar-table'),
+  btnCopyScalarCsv: document.getElementById('btn-copy-scalar-csv'),
+  scalarTable: document.getElementById('scalar-multiplication-table'),
+  scalarNotice: document.getElementById('scalar-overflow-notice')
 };
 
 const ctx = dom.canvas.getContext('2d');
@@ -201,13 +268,54 @@ function calculateCurve() {
   // 5. Renderizar Tabla Paso a Paso
   renderTable(rowsData);
 
-  // 6. Poblar selectores de suma y doblado
+  state.allGroupPoints = ['INF', ...points];
+
+  if (state.isSingular) {
+    dom.metricGenCount.textContent = '0';
+    dom.metricGenStatus.textContent = 'Curva singular (sin grupo)';
+    dom.displayScalarResult.textContent = '--';
+    dom.scalarBreakdown.innerHTML = '<div class="warning-banner">La curva es singular (4a³ + 27b² ≡ 0 mod p). No se pueden realizar operaciones de grupo elíptico.</div>';
+    dom.generatorsSummaryBox.innerHTML = '<div class="warning-banner">La curva es singular: tiene singularidades (puntos dobles o cúspides) y no forma un grupo elíptico liso. No existen puntos generadores definidos.</div>';
+    dom.generatorsList.innerHTML = '<span class="pill-no">Sin generadores (curva singular).</span>';
+    dom.ordersTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.2rem; color:var(--text-dim);">No aplicable a curvas singulares.</td></tr>';
+    dom.cayleyTable.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-dim);">No disponible para curvas singulares.</td></tr>';
+    dom.scalarTable.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-dim);">No disponible para curvas singulares.</td></tr>';
+    populatePointSelectors();
+    renderCanvas();
+    return;
+  }
+
+  // 6. Identificar y listar puntos generadores (Requisito 3.f)
+  const genData = findGeneratorsAndOrders(state.points, state.a, state.p, groupOrder);
+  state.generators = genData.generators;
+  state.pointOrdersData = genData.pointOrders;
+  state.isCyclic = genData.isCyclic;
+  state.phiN = genData.phiN;
+  state.maxOrder = genData.maxOrder;
+
+  dom.metricGenCount.textContent = `${genData.generators.length}`;
+  dom.metricGenStatus.textContent = genData.isCyclic 
+    ? `Grupo Cíclico ℤ_${groupOrder} (φ(N) = ${genData.phiN})` 
+    : `No cíclico (Orden máx: ${genData.maxOrder})`;
+
+  renderGeneratorsSection(genData, groupOrder);
+
+  // 7. Poblar selectores de suma, doblado y multiplicación escalar
   populatePointSelectors();
 
-  // 7. Ejecutar operación inicial si hay puntos
+  // 8. Ejecutar operación inicial de suma/doblado
   executeCurrentOperation();
 
-  // 8. Dibujar Canvas
+  // 9. Ejecutar operación inicial de multiplicación escalar (Requisito 3.c)
+  executeScalarOperation();
+
+  // 10. Construir e imprimir tabla de suma de puntos de Cayley (Requisito 3.d)
+  buildAndRenderCayleyTable();
+
+  // 11. Construir e imprimir tabla de multiplicación escalar (Requisito 3.e)
+  buildAndRenderScalarTable();
+
+  // 12. Dibujar Canvas
   renderCanvas();
 }
 
@@ -249,7 +357,7 @@ function renderTable(rows) {
   });
 }
 
-// Poblar selectores de P y Q
+// Poblar selectores de P, Q y Escalar P
 function populatePointSelectors() {
   let options = '<option value="INF">𝒪 (Punto al Infinito)</option>';
   state.points.forEach((pt, idx) => {
@@ -258,6 +366,9 @@ function populatePointSelectors() {
 
   dom.selectP.innerHTML = options;
   dom.selectQ.innerHTML = options;
+  if (dom.selectScalarP) {
+    dom.selectScalarP.innerHTML = options;
+  }
 
   if (state.points.length > 0) {
     // P = primer punto
@@ -272,11 +383,20 @@ function populatePointSelectors() {
       dom.selectQ.selectedIndex = 1;
       state.pointQ = { x: state.points[0].x, y: state.points[0].y };
     }
+
+    if (dom.selectScalarP) {
+      dom.selectScalarP.selectedIndex = 1;
+      state.scalarPoint = { x: state.points[0].x, y: state.points[0].y };
+    }
   } else {
     dom.selectP.selectedIndex = 0;
     dom.selectQ.selectedIndex = 0;
     state.pointP = 'INF';
     state.pointQ = 'INF';
+    if (dom.selectScalarP) {
+      dom.selectScalarP.selectedIndex = 0;
+      state.scalarPoint = 'INF';
+    }
   }
 }
 
@@ -862,6 +982,722 @@ dom.btnCopy.addEventListener('click', () => {
     }, 1800);
   });
 });
+
+/* ==========================================================================
+   [RECUADRO ROJO REPORTE - PROCEDIMIENTO 1: MULTIPLICACIÓN ESCALAR]
+   Función: scalarMultiply(k, P, a, p)
+   Descripción: Realiza la multiplicación escalar k · P sobre la curva elíptica
+                utilizando el algoritmo Double-and-Add (Doblado y Suma binaria).
+   Parámetros:
+     - k (Number): Escalar entero (k >= 0).
+     - P (Object|String): Punto base {x, y} o 'INF' (punto al infinito 𝒪).
+     - a (Number): Coeficiente lineal de la curva elíptica y² = x³ + ax + b (mod p).
+     - p (Number): Módulo primo del campo finito 𝔽ₚ.
+   Retorna:
+     - Object: {
+         R: Punto resultante {x, y} o 'INF',
+         k: Escalar aplicado,
+         P: Punto base utilizado,
+         binaryStr: Cadena binaria de k,
+         steps: Array con la secuencia detallada de pasos matemáticos
+       }
+   ========================================================================== */
+function scalarMultiply(k, P, a, p) {
+  k = parseInt(k, 10);
+  if (isNaN(k) || k < 0) k = 0;
+
+  if (P === 'INF' || k === 0) {
+    return {
+      R: 'INF',
+      k,
+      P,
+      binaryStr: '0',
+      steps: [
+        `Escalar k = ${k}.`,
+        `Propiedad del elemento neutro: ${k} &bull; ${formatPoint(P)} = 𝒪.`
+      ]
+    };
+  }
+
+  if (k === 1) {
+    return {
+      R: P,
+      k,
+      P,
+      binaryStr: '1',
+      steps: [
+        `Escalar k = 1:`,
+        `1 &bull; ${formatPoint(P)} = ${formatPoint(P)}.`
+      ]
+    };
+  }
+
+  const binaryStr = k.toString(2);
+  const steps = [];
+  steps.push(`<strong>Representación binaria del escalar:</strong> k = ${k} = (${binaryStr})₂ (Longitud: ${binaryStr.length} bits)`);
+
+  let current = 'INF';
+
+  for (let i = 0; i < binaryStr.length; i++) {
+    const bit = binaryStr[i];
+    const bitIndex = i + 1;
+
+    // En el algoritmo Double-and-Add: doblamos si current ya no es INF
+    if (current !== 'INF') {
+      const prev = current;
+      const doubleRes = addPoints(current, current, a, p);
+      current = doubleRes.R;
+      steps.push(`Paso ${bitIndex}.a [Bit ${bit}] &rarr; <strong>Doblado (Double):</strong> 2 &bull; ${formatPoint(prev)} = ${formatPoint(current)}`);
+    }
+
+    // Si el bit actual es 1, sumamos el punto base P
+    if (bit === '1') {
+      if (current === 'INF') {
+        current = P;
+        steps.push(`Paso ${bitIndex}.b [Bit 1] &rarr; <strong>Inicialización:</strong> R = P = ${formatPoint(P)}`);
+      } else {
+        const prev = current;
+        const addRes = addPoints(current, P, a, p);
+        current = addRes.R;
+        steps.push(`Paso ${bitIndex}.b [Bit 1] &rarr; <strong>Suma (Add):</strong> ${formatPoint(prev)} + ${formatPoint(P)} = ${formatPoint(current)}`);
+      }
+    }
+  }
+
+  steps.push(`<strong>Resultado Final:</strong> ${k} &bull; ${formatPoint(P)} = <strong>${formatPoint(current)}</strong>`);
+
+  return {
+    R: current,
+    k,
+    P,
+    binaryStr,
+    steps
+  };
+}
+
+/* ==========================================================================
+   [RECUADRO ROJO REPORTE - PROCEDIMIENTO 2: IDENTIFICACIÓN DE PUNTOS GENERADORES]
+   Función: findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder)
+   Descripción: Calcula el orden cíclico de cada punto en el grupo E(𝔽ₚ) y determina
+                cuáles son los puntos generadores de la curva elíptica.
+                Un punto G es generador si genera todo el grupo cíclico, es decir,
+                su orden es exactamente igual a la cardinalidad #E(𝔽ₚ).
+   Parámetros:
+     - allAffinePoints (Array): Lista de puntos finitos [{x, y}, ...].
+     - a (Number): Coeficiente lineal de la curva.
+     - p (Number): Módulo primo del campo finito 𝔽ₚ.
+     - groupOrder (Number): Cardinalidad del grupo #E(𝔽ₚ) = puntos_afines + 1.
+   Retorna:
+     - Object: {
+         isCyclic: Boolean,         // Verdadero si el grupo es cíclico
+         generators: Array,         // Lista de puntos generadores {x, y}
+         pointOrders: Array,        // Lista [{ point, order, isGenerator, subgroup }]
+         phiN: Number,              // Cantidad teórica de generadores φ(#E(𝔽ₚ))
+         maxOrder: Number           // Orden máximo encontrado en el grupo
+       }
+   ========================================================================== */
+function findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder) {
+  const allPoints = ['INF', ...allAffinePoints];
+  const pointOrders = [];
+  const generators = [];
+  let maxOrder = 1;
+
+  for (const pt of allPoints) {
+    if (pt === 'INF') {
+      pointOrders.push({
+        point: 'INF',
+        order: 1,
+        isGenerator: groupOrder === 1,
+        subgroup: ['INF']
+      });
+      continue;
+    }
+
+    // Calcular múltiplos sucesivos: 1P, 2P, 3P, ... hasta alcanzar INF
+    let current = pt;
+    let order = 1;
+    const subgroup = [pt];
+
+    while (current !== 'INF' && order <= groupOrder + 1) {
+      const nextRes = addPoints(current, pt, a, p);
+      current = nextRes.R;
+      order++;
+      subgroup.push(current);
+      if (current === 'INF') break;
+    }
+
+    if (order > maxOrder) maxOrder = order;
+
+    const isGen = (order === groupOrder);
+    if (isGen) {
+      generators.push(pt);
+    }
+
+    pointOrders.push({
+      point: pt,
+      order,
+      isGenerator: isGen,
+      subgroup
+    });
+  }
+
+  const isCyclic = (maxOrder === groupOrder);
+  const phiN = isCyclic ? eulerPhi(groupOrder) : 0;
+
+  return {
+    isCyclic,
+    generators,
+    pointOrders,
+    phiN,
+    maxOrder
+  };
+}
+
+// Renderizar sección de puntos generadores
+function renderGeneratorsSection(genData, groupOrder) {
+  if (!dom.genCountBadge) return;
+
+  dom.genCountBadge.textContent = `${genData.generators.length} Generadores`;
+  if (genData.isCyclic) {
+    dom.genCyclicBadge.className = 'badge';
+    dom.genCyclicBadge.style.color = 'var(--accent-emerald)';
+    dom.genCyclicBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    dom.genCyclicBadge.textContent = `Grupo Cíclico E(𝔽_${state.p}) ≅ ℤ_${groupOrder}`;
+  } else {
+    dom.genCyclicBadge.className = 'badge';
+    dom.genCyclicBadge.style.color = 'var(--accent-amber)';
+    dom.genCyclicBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    dom.genCyclicBadge.textContent = `Grupo No Cíclico (Orden máx = ${genData.maxOrder})`;
+  }
+
+  dom.generatorsSummaryBox.innerHTML = `
+    <div style="width:100%; display:flex; flex-direction:column; gap:0.4rem;">
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+        <span><strong>Cardinalidad #E(𝔽<sub>${state.p}</sub>):</strong> ${groupOrder}</span>
+        <span><strong>Generadores teóricos φ(N):</strong> ${genData.phiN}</span>
+        <span><strong>Generadores identificados:</strong> ${genData.generators.length}</span>
+      </div>
+      <div style="font-size:0.8rem; color:var(--text-muted);">
+        ${genData.isCyclic 
+          ? `✓ Todo punto G con orden ord(G) = ${groupOrder} genera cíclicamente el grupo elíptico completo: &lang;G&rang; = { 𝒪, G, 2G, ..., ${groupOrder - 1}G }.`
+          : `⚠ Ningún punto individual genera la curva completa. El grupo es isomorfo a un producto directo ℤ_{d₁} × ℤ_{d₂}.`}
+      </div>
+    </div>
+  `;
+
+  if (genData.generators.length === 0) {
+    dom.generatorsList.innerHTML = `<span class="pill-no">No existen generadores individuales de orden ${groupOrder}.</span>`;
+  } else {
+    dom.generatorsList.innerHTML = genData.generators.map(g => `
+      <button type="button" class="badge-generator" data-pt="${g.x},${g.y}" title="Clic para usar como punto P">
+        <span>(${g.x}, ${g.y})</span>
+        <span class="badge-order-tag">ord = ${groupOrder}</span>
+      </button>
+    `).join('');
+
+    dom.generatorsList.querySelectorAll('.badge-generator').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [x, y] = btn.dataset.pt.split(',').map(Number);
+        setPointAsP({ x, y });
+      });
+    });
+  }
+
+  renderOrdersTable();
+}
+
+// Renderizar tabla de órdenes y subgrupos
+function renderOrdersTable() {
+  if (!dom.ordersTbody) return;
+  if (!state.pointOrdersData || state.pointOrdersData.length === 0) {
+    dom.ordersTbody.innerHTML = '<tr><td colspan="5">No hay datos de orden.</td></tr>';
+    return;
+  }
+
+  const filtered = state.ordersFilter === 'only-gen' 
+    ? state.pointOrdersData.filter(d => d.isGenerator) 
+    : state.pointOrdersData;
+
+  if (filtered.length === 0) {
+    dom.ordersTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-dim);">No se encontraron puntos generadores con ord(P) = #E(𝔽<sub>p</sub>).</td></tr>';
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(item => {
+    const ptStr = formatPoint(item.point);
+    const genPill = item.isGenerator 
+      ? '<span class="pill-yes">✓ Sí (Generador)</span>' 
+      : '<span class="pill-no">No</span>';
+
+    let subStr = item.subgroup.map(pt => formatPoint(pt)).join(', ');
+    if (item.subgroup.length > 8) {
+      const firstFew = item.subgroup.slice(0, 7).map(pt => formatPoint(pt)).join(', ');
+      subStr = `${firstFew}, ..., 𝒪 (${item.subgroup.length} elementos)`;
+    }
+
+    const isInf = item.point === 'INF';
+    const ptAttr = isInf ? 'INF' : `${item.point.x},${item.point.y}`;
+
+    html += `
+      <tr>
+        <td><strong>${ptStr}</strong></td>
+        <td><strong style="color:var(--accent-cyan);">${item.order}</strong></td>
+        <td>${genPill}</td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">&lang;${ptStr}&rang; = { ${subStr} }</td>
+        <td>
+          ${!isInf ? `<button type="button" class="btn ghost-btn btn-use-p" data-pt="${ptAttr}" style="padding:0.25rem 0.6rem; font-size:0.75rem;">Usar como P</button>` : '<span style="color:var(--text-dim);">&mdash;</span>'}
+        </td>
+      </tr>
+    `;
+  });
+
+  dom.ordersTbody.innerHTML = html;
+
+  dom.ordersTbody.querySelectorAll('.btn-use-p').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const parts = btn.dataset.pt.split(',').map(Number);
+      setPointAsP({ x: parts[0], y: parts[1] });
+    });
+  });
+}
+
+// Asignar un punto como P en operaciones de suma y multiplicación escalar
+function setPointAsP(pt) {
+  const ptStr = `${pt.x},${pt.y}`;
+  dom.selectP.value = ptStr;
+  state.pointP = pt;
+  if (dom.selectScalarP) {
+    dom.selectScalarP.value = ptStr;
+    state.scalarPoint = pt;
+  }
+  executeCurrentOperation();
+  executeScalarOperation();
+  renderCanvas();
+  document.getElementById('addition-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Ejecutar operación de multiplicación escalar
+function executeScalarOperation() {
+  if (!dom.displayScalarResult) return;
+  if (state.isSingular) {
+    dom.displayScalarResult.textContent = '--';
+    dom.scalarBreakdown.innerHTML = '<div class="warning-banner">La curva es singular y no forma un grupo elíptico.</div>';
+    return;
+  }
+
+  const kVal = parseInt(dom.inputScalarK.value, 10);
+  const k = isNaN(kVal) ? 1 : Math.max(0, kVal);
+  state.scalarK = k;
+
+  const P = parsePoint(dom.selectScalarP.value);
+  state.scalarPoint = P;
+
+  const result = scalarMultiply(k, P, state.a, state.p);
+  state.scalarResult = result;
+
+  dom.displayScalarResult.textContent = formatPoint(result.R);
+
+  let html = `
+    <div class="op-step-title">
+      <span class="op-tag-badge">MULTIPLICACIÓN ESCALAR</span>
+      <span>${k} &bull; ${formatPoint(P)} = ${formatPoint(result.R)}</span>
+    </div>
+    <div class="op-step-calc">
+  `;
+
+  result.steps.forEach(s => {
+    html += `<div>&bull; ${s}</div>`;
+  });
+
+  html += `
+    </div>
+    <div class="op-step-result">
+      Resultado k &bull; P = ${formatPoint(result.R)}
+    </div>
+  `;
+
+  dom.scalarBreakdown.innerHTML = html;
+
+  state.pointR = result.R;
+  renderCanvas();
+}
+
+// Construir y renderizar Tabla de Suma de Puntos (Cayley)
+function buildAndRenderCayleyTable() {
+  if (!dom.cayleyTable) return;
+  const allPts = state.allGroupPoints;
+  const N = allPts.length;
+
+  if (N === 0 || state.isSingular) {
+    dom.cayleyTable.innerHTML = '';
+    return;
+  }
+
+  const maxDisplay = Math.min(N, 35);
+  if (N > 35) {
+    dom.cayleyNotice.classList.remove('hidden');
+    dom.cayleyNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan los primeros ${maxDisplay} puntos para optimizar la respuesta del navegador. Usa "Imprimir Tabla" para obtener el documento completo.`;
+  } else {
+    dom.cayleyNotice.classList.add('hidden');
+  }
+
+  const displayPts = allPts.slice(0, maxDisplay);
+
+  let headerHtml = '<thead><tr><th class="sticky-col">+</th>';
+  displayPts.forEach(pt => {
+    headerHtml += `<th>${formatPoint(pt)}</th>`;
+  });
+  headerHtml += '</tr></thead>';
+
+  let bodyHtml = '<tbody>';
+  const matrix = [];
+
+  for (let i = 0; i < displayPts.length; i++) {
+    const P_i = displayPts[i];
+    const rowPts = [];
+    bodyHtml += `<tr><th class="sticky-col">${formatPoint(P_i)}</th>`;
+
+    for (let j = 0; j < displayPts.length; j++) {
+      const P_j = displayPts[j];
+      const sumRes = addPoints(P_i, P_j, state.a, state.p);
+      const R = sumRes.R;
+      rowPts.push(R);
+
+      const isInf = R === 'INF';
+      const cellClass = isInf ? 'cell-identity' : '';
+      const ptStrP = P_i === 'INF' ? 'INF' : `${P_i.x},${P_i.y}`;
+      const ptStrQ = P_j === 'INF' ? 'INF' : `${P_j.x},${P_j.y}`;
+
+      bodyHtml += `<td class="${cellClass}" data-p="${ptStrP}" data-q="${ptStrQ}" title="${formatPoint(P_i)} + ${formatPoint(P_j)} = ${formatPoint(R)}">${formatPoint(R)}</td>`;
+    }
+    bodyHtml += '</tr>';
+    matrix.push(rowPts);
+  }
+  bodyHtml += '</tbody>';
+
+  dom.cayleyTable.innerHTML = headerHtml + bodyHtml;
+  state.cayleyMatrix = matrix;
+
+  dom.cayleyTable.querySelectorAll('td').forEach(td => {
+    td.addEventListener('click', () => {
+      const pVal = td.dataset.p;
+      const qVal = td.dataset.q;
+      dom.selectP.value = pVal;
+      dom.selectQ.value = qVal;
+      state.pointP = parsePoint(pVal);
+      state.pointQ = parsePoint(qVal);
+      executeCurrentOperation();
+      document.getElementById('addition-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+}
+
+// Exportar Tabla de Cayley a formato CSV
+function exportCayleyCsv() {
+  const allPts = state.allGroupPoints;
+  if (!allPts || allPts.length === 0) return;
+
+  let csv = '+,' + allPts.map(pt => `"${formatPoint(pt)}"`).join(',') + '\n';
+  allPts.forEach(Pi => {
+    const row = [`"${formatPoint(Pi)}"`];
+    allPts.forEach(Pj => {
+      const res = addPoints(Pi, Pj, state.a, state.p).R;
+      row.push(`"${formatPoint(res)}"`);
+    });
+    csv += row.join(',') + '\n';
+  });
+
+  navigator.clipboard.writeText(csv).then(() => {
+    const orig = dom.btnCopyCayleyCsv.textContent;
+    dom.btnCopyCayleyCsv.textContent = '¡CSV Copiado!';
+    setTimeout(() => { dom.btnCopyCayleyCsv.textContent = orig; }, 1800);
+  });
+}
+
+// Construir y renderizar Tabla de Multiplicación Escalar
+function buildAndRenderScalarTable() {
+  if (!dom.scalarTable) return;
+  const allPts = state.allGroupPoints;
+  const N = allPts.length;
+
+  if (N === 0 || state.isSingular) {
+    dom.scalarTable.innerHTML = '';
+    return;
+  }
+
+  const maxK = Math.min(N, 35);
+  if (N > 35) {
+    dom.scalarNotice.classList.remove('hidden');
+    dom.scalarNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan escalares k ∈ {1, ..., ${maxK}} para optimizar la vista.`;
+  } else {
+    dom.scalarNotice.classList.add('hidden');
+  }
+
+  let headerHtml = '<thead><tr><th class="sticky-col">Punto P</th><th>ord(P)</th><th>¿Generador?</th>';
+  for (let k = 1; k <= maxK; k++) {
+    headerHtml += `<th>${k}P</th>`;
+  }
+  headerHtml += '</tr></thead>';
+
+  let bodyHtml = '<tbody>';
+  const tableData = [];
+
+  allPts.forEach(P => {
+    const isInf = P === 'INF';
+    const ptOrder = isInf ? 1 : (state.pointOrdersData.find(d => !isInf && d.point.x === P.x && d.point.y === P.y)?.order || 1);
+    const isGen = ptOrder === N;
+    const genPill = isGen ? '<span class="pill-yes">Sí</span>' : '<span class="pill-no">No</span>';
+
+    bodyHtml += `<tr><th class="sticky-col"><strong>${formatPoint(P)}</strong></th><td>${ptOrder}</td><td>${genPill}</td>`;
+
+    let current = 'INF';
+    const rowMultiples = [];
+
+    for (let k = 1; k <= maxK; k++) {
+      if (k === 1) {
+        current = P;
+      } else {
+        current = addPoints(current, P, state.a, state.p).R;
+      }
+      rowMultiples.push(current);
+
+      const cellClass = current === 'INF' ? 'cell-identity' : '';
+      const ptAttr = isInf ? 'INF' : `${P.x},${P.y}`;
+
+      bodyHtml += `<td class="${cellClass}" data-p="${ptAttr}" data-k="${k}" title="k = ${k}: ${k} • ${formatPoint(P)} = ${formatPoint(current)}">${formatPoint(current)}</td>`;
+    }
+
+    bodyHtml += '</tr>';
+    tableData.push({ point: P, order: ptOrder, isGen, multiples: rowMultiples });
+  });
+
+  bodyHtml += '</tbody>';
+  dom.scalarTable.innerHTML = headerHtml + bodyHtml;
+  state.scalarMultiplicationData = tableData;
+
+  dom.scalarTable.querySelectorAll('td[data-k]').forEach(td => {
+    td.addEventListener('click', () => {
+      const pVal = td.dataset.p;
+      const kVal = td.dataset.k;
+      dom.selectScalarP.value = pVal;
+      dom.inputScalarK.value = kVal;
+      state.scalarPoint = parsePoint(pVal);
+      state.scalarK = parseInt(kVal, 10);
+      executeScalarOperation();
+      document.getElementById('scalar-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+}
+
+// Exportar Tabla de Multiplicación Escalar a CSV
+function exportScalarCsv() {
+  const allPts = state.allGroupPoints;
+  const N = allPts.length;
+  if (!allPts || N === 0) return;
+
+  const kHeaders = [];
+  for (let k = 1; k <= N; k++) kHeaders.push(`${k}P`);
+  let csv = 'Punto,Orden,EsGenerador,' + kHeaders.join(',') + '\n';
+
+  allPts.forEach(P => {
+    const isInf = P === 'INF';
+    const ptOrder = isInf ? 1 : (state.pointOrdersData.find(d => !isInf && d.point.x === P.x && d.point.y === P.y)?.order || 1);
+    const isGen = ptOrder === N ? 'Si' : 'No';
+
+    const row = [`"${formatPoint(P)}"`, ptOrder, isGen];
+    let current = 'INF';
+    for (let k = 1; k <= N; k++) {
+      current = (k === 1) ? P : addPoints(current, P, state.a, state.p).R;
+      row.push(`"${formatPoint(current)}"`);
+    }
+    csv += row.join(',') + '\n';
+  });
+
+  navigator.clipboard.writeText(csv).then(() => {
+    const orig = dom.btnCopyScalarCsv.textContent;
+    dom.btnCopyScalarCsv.textContent = '¡CSV Copiado!';
+    setTimeout(() => { dom.btnCopyScalarCsv.textContent = orig; }, 1800);
+  });
+}
+
+// Impresión profesional de tablas en ventana emergente formateada para reporte
+function printTableInNewWindow(title, tableElement, subtitle) {
+  const printWindow = window.open('', '_blank', 'width=950,height=750');
+  if (!printWindow) {
+    alert('Por favor autoriza ventanas emergentes para imprimir la tabla.');
+    return;
+  }
+
+  const tableClone = tableElement.cloneNode(true);
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>${title} - Curvas Elípticas</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+          color: #111;
+          background: #fff;
+          padding: 24px;
+          margin: 0;
+        }
+        .header {
+          text-align: center;
+          border-bottom: 2px solid #111;
+          padding-bottom: 12px;
+          margin-bottom: 20px;
+        }
+        .header h1 { margin: 0 0 4px; font-size: 15pt; text-transform: uppercase; letter-spacing: 0.05em; }
+        .header h2 { margin: 0 0 4px; font-size: 12pt; color: #222; }
+        .header h3 { margin: 0 0 8px; font-size: 10pt; color: #444; }
+        .header p { margin: 2px 0; font-size: 9.5pt; color: #333; }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 8.5pt;
+          margin-top: 15px;
+        }
+        th, td {
+          border: 1px solid #555;
+          padding: 5px 6px;
+          text-align: center;
+          white-space: nowrap;
+        }
+        th {
+          background-color: #f1f5f9;
+          font-weight: 600;
+        }
+        td.cell-identity {
+          background-color: #e6f4ea;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 24px;
+          font-size: 8.5pt;
+          text-align: right;
+          color: #666;
+          border-top: 1px solid #ccc;
+          padding-top: 8px;
+        }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; size: landscape; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Instituto Politécnico Nacional</h1>
+        <h2>Escuela Superior de Cómputo (ESCOM)</h2>
+        <h3>Selected Topics in Cryptography &bull; Calculadora de Curvas Elípticas</h3>
+        <p><strong>${title}</strong> &bull; ${subtitle}</p>
+        <p>Curva: <code>y² ≡ x³ + ${state.a}x + ${state.b} (mod ${state.p})</code> &bull; Cardinalidad: <strong>#E(𝔽<sub>${state.p}</sub>) = ${state.points.length + 1}</strong></p>
+      </div>
+      <div style="overflow-x: auto;">
+        ${tableClone.outerHTML}
+      </div>
+      <div class="footer">
+        Reporte de Práctica &bull; Calculadora de Curvas Elípticas sobre Campos Finitos
+      </div>
+      <script>
+        window.onload = function() {
+          window.focus();
+          window.print();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+// Event Listeners para Multiplicación Escalar
+if (dom.btnScalarCalc) {
+  dom.btnScalarCalc.addEventListener('click', executeScalarOperation);
+}
+if (dom.selectScalarP) {
+  dom.selectScalarP.addEventListener('change', () => {
+    state.scalarPoint = parsePoint(dom.selectScalarP.value);
+    executeScalarOperation();
+  });
+}
+if (dom.inputScalarK) {
+  dom.inputScalarK.addEventListener('input', executeScalarOperation);
+}
+if (dom.btnScalarPrev) {
+  dom.btnScalarPrev.addEventListener('click', () => {
+    const cur = parseInt(dom.inputScalarK.value, 10) || 1;
+    dom.inputScalarK.value = Math.max(0, cur - 1);
+    executeScalarOperation();
+  });
+}
+if (dom.btnScalarNext) {
+  dom.btnScalarNext.addEventListener('click', () => {
+    const cur = parseInt(dom.inputScalarK.value, 10) || 0;
+    dom.inputScalarK.value = cur + 1;
+    executeScalarOperation();
+  });
+}
+if (dom.btnScalarOrder) {
+  dom.btnScalarOrder.addEventListener('click', () => {
+    const N = state.points.length + 1;
+    dom.inputScalarK.value = N;
+    executeScalarOperation();
+  });
+}
+if (dom.btnScalarDouble) {
+  dom.btnScalarDouble.addEventListener('click', () => {
+    dom.inputScalarK.value = 2;
+    executeScalarOperation();
+  });
+}
+
+// Event Listeners para Filtros de Generadores
+if (dom.btnFilterAllOrders) {
+  dom.btnFilterAllOrders.addEventListener('click', () => {
+    state.ordersFilter = 'all';
+    dom.btnFilterAllOrders.classList.add('active');
+    dom.btnFilterOnlyGen.classList.remove('active');
+    renderOrdersTable();
+  });
+}
+if (dom.btnFilterOnlyGen) {
+  dom.btnFilterOnlyGen.addEventListener('click', () => {
+    state.ordersFilter = 'only-gen';
+    dom.btnFilterOnlyGen.classList.add('active');
+    dom.btnFilterAllOrders.classList.remove('active');
+    renderOrdersTable();
+  });
+}
+
+// Event Listeners para Tabla de Suma (Cayley)
+if (dom.btnPrintCayley) {
+  dom.btnPrintCayley.addEventListener('click', () => {
+    printTableInNewWindow('Tabla de Suma de Puntos (Cayley)', dom.cayleyTable, 'Operación de grupo abeliano P + Q = R');
+  });
+}
+if (dom.btnCopyCayleyCsv) {
+  dom.btnCopyCayleyCsv.addEventListener('click', exportCayleyCsv);
+}
+
+// Event Listeners para Tabla de Multiplicación Escalar
+if (dom.btnPrintScalarTable) {
+  dom.btnPrintScalarTable.addEventListener('click', () => {
+    printTableInNewWindow('Tabla de Multiplicación Escalar', dom.scalarTable, 'Múltiplos k • P para k ∈ {1, ..., #E(𝔽p)}');
+  });
+}
+if (dom.btnCopyScalarCsv) {
+  dom.btnCopyScalarCsv.addEventListener('click', exportScalarCsv);
+}
+
+// Listener para botón de sólo validar
+if (dom.btnValidateOnly) {
+  dom.btnValidateOnly.addEventListener('click', calculateCurve);
+}
 
 // Inicialización
 calculateCurve();
