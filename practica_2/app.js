@@ -1,31 +1,33 @@
 /**
  * Calculadora y Visualizador de Curvas Elípticas sobre Fp
- * Filosofía: Vanilla JS sin dependencias, alto rendimiento y precisión matemática.
+ * Usa la biblioteca criptográfica 'elliptic' para las operaciones de curva
+ * (construcción de la curva, suma/doblado de puntos y multiplicación escalar).
  */
 
-// Utilidad módulo positivo
+// Instancia de curva elíptica global gestionada por elliptic.js
+let ecCurve = null;
+
+// Utilidad módulo positivo para operaciones auxiliares
 function mod(n, m) {
   return ((n % m) + m) % m;
 }
 
-// Inverso modular usando Algoritmo Extendido de Euclides
+// Inverso modular mediante el Algoritmo Extendido de Euclides (EEA)
 function modInverse(a, m) {
   a = mod(a, m);
   if (a === 0) return null;
-  let m0 = m, y = 0, x = 1;
-  if (m === 1) return 0;
-  while (a > 1) {
-    if (m0 === 0) return null;
-    let q = Math.floor(a / m0);
-    let t = m0;
-    m0 = a % m0;
-    a = t;
-    t = y;
-    y = x - q * y;
-    x = t;
+
+  let [oldR, r] = [a, m];
+  let [oldS, s] = [1, 0];
+
+  while (r !== 0) {
+    const q = Math.floor(oldR / r);
+    [oldR, r] = [r, oldR - q * r];
+    [oldS, s] = [s, oldS - q * s];
   }
-  if (x < 0) x += m;
-  return x;
+
+  if (oldR !== 1) return null; // gcd(a, m) !== 1 -> no existe inverso
+  return mod(oldS, m);
 }
 
 // Test de primalidad básico determinista
@@ -39,7 +41,7 @@ function isPrime(n) {
   return true;
 }
 
-// Función Indicatriz de Euler φ(n) para cálculo de generadores teóricos en grupos cíclicos
+// Función Indicatriz de Euler φ(n)
 function eulerPhi(n) {
   let result = n;
   let temp = n;
@@ -67,7 +69,7 @@ const state = {
   pointQ: null, // { x, y } o 'INF'
   pointR: null, // { x, y } o 'INF'
   lastOp: null,
-  nextSelectTarget: 'P', // 'P' o 'Q' para alternar clics
+  nextSelectTarget: 'P',
 
   // Multiplicación Escalar k · P
   scalarK: 2,
@@ -80,7 +82,7 @@ const state = {
   isCyclic: false,
   phiN: 0,
   maxOrder: 1,
-  ordersFilter: 'all', // 'all' o 'only-gen'
+  ordersFilter: 'all',
 
   // Tablas
   cayleyMatrix: [],
@@ -141,13 +143,12 @@ const dom = {
   btnFilterOnlyGen: document.getElementById('btn-filter-only-gen'),
   ordersTbody: document.getElementById('orders-tbody'),
 
-  // Tabla de Suma (Cayley)
+  // Tablas
   btnPrintCayley: document.getElementById('btn-print-cayley'),
   btnCopyCayleyCsv: document.getElementById('btn-copy-cayley-csv'),
   cayleyTable: document.getElementById('cayley-table'),
   cayleyNotice: document.getElementById('cayley-overflow-notice'),
 
-  // Tabla de Multiplicación Escalar
   btnPrintScalarTable: document.getElementById('btn-print-scalar-table'),
   btnCopyScalarCsv: document.getElementById('btn-copy-scalar-csv'),
   scalarTable: document.getElementById('scalar-multiplication-table'),
@@ -155,6 +156,38 @@ const dom = {
 };
 
 const ctx = dom.canvas.getContext('2d');
+
+/**
+ * Inicializa la estructura de la curva utilizando la biblioteca Criptográfica 'elliptic'.
+ */
+function initEllipticCurve(a, b, p) {
+  ecCurve = new elliptic.curve.short({
+    p: p,
+    a: mod(a, p),
+    b: mod(b, p)
+  });
+}
+
+/**
+ * Convierte un objeto de punto afín a una instancia de punto de 'elliptic'
+ */
+function toEllipticPoint(pt) {
+  if (!pt || pt === 'INF') {
+    return ecCurve.point(null, null);
+  }
+  return ecCurve.point(pt.x, pt.y);
+}
+
+/**
+ * Convierte un punto de 'elliptic' al formato de la aplicación {x, y} u 'INF'
+ */
+function fromEllipticPoint(ecPt) {
+  if (ecPt.isInfinity()) return 'INF';
+  return {
+    x: parseInt(ecPt.getX().toString(10), 10),
+    y: parseInt(ecPt.getY().toString(10), 10)
+  };
+}
 
 // Cálculo principal de la curva
 function calculateCurve() {
@@ -170,6 +203,9 @@ function calculateCurve() {
   state.a = a;
   state.b = b;
   state.p = p;
+
+  // Inicializar la biblioteca criptográfica con los parámetros ingresados
+  initEllipticCurve(a, b, p);
 
   // Verificación primalidad de p
   const primeCheck = isPrime(p);
@@ -194,7 +230,6 @@ function calculateCurve() {
   state.discriminant = discMod;
   state.isSingular = discMod === 0;
 
-  // Renderizar desglose del discriminante
   dom.discBreakdown.innerHTML = `
     <div>4a³ = 4(${a})³ = 4(${a3}) = ${term1}</div>
     <div>27b² = 27(${b})² = 27(${b2}) = ${term2}</div>
@@ -210,7 +245,7 @@ function calculateCurve() {
   } else {
     dom.discStatus.className = 'status-banner valid';
     dom.discStatus.innerHTML = `
-      <span>✓ <strong>Curva Válida y No Singular (4a³ + 27b² ≢ 0 mod p)</strong>. Forma un grupo abeliano bien definido.</span>
+      <span>✓ <strong>Curva Válida y No Singular (4a³ + 27b² ≢ 0 mod p)</strong>.</span>
     `;
   }
 
@@ -222,7 +257,7 @@ function calculateCurve() {
     residues[sq].push(y);
   }
 
-  // 3. Buscar todos los puntos (x, y)
+  // 3. Buscar todos los puntos afines (x, y)
   const rowsData = [];
   const points = [];
 
@@ -252,7 +287,7 @@ function calculateCurve() {
 
   // 4. Métricas y Cota de Hasse
   const affineCount = points.length;
-  const groupOrder = affineCount + 1; // +1 por el punto al infinito O
+  const groupOrder = affineCount + 1;
   const sqrtP = Math.sqrt(p);
   const lowerHasse = Math.ceil(p + 1 - 2 * sqrtP);
   const upperHasse = Math.floor(p + 1 + 2 * sqrtP);
@@ -265,9 +300,7 @@ function calculateCurve() {
     ? `Cumple cota de Hasse (|${p + 1} - ${groupOrder}| ≤ ${Math.floor(2 * sqrtP * 100) / 100})`
     : `Fuera de cota estándar (posible curva singular o no primo)`;
 
-  // 5. Renderizar Tabla Paso a Paso
   renderTable(rowsData);
-
   state.allGroupPoints = ['INF', ...points];
 
   if (state.isSingular) {
@@ -275,7 +308,7 @@ function calculateCurve() {
     dom.metricGenStatus.textContent = 'Curva singular (sin grupo)';
     dom.displayScalarResult.textContent = '--';
     dom.scalarBreakdown.innerHTML = '<div class="warning-banner">La curva es singular (4a³ + 27b² ≡ 0 mod p). No se pueden realizar operaciones de grupo elíptico.</div>';
-    dom.generatorsSummaryBox.innerHTML = '<div class="warning-banner">La curva es singular: tiene singularidades (puntos dobles o cúspides) y no forma un grupo elíptico liso. No existen puntos generadores definidos.</div>';
+    dom.generatorsSummaryBox.innerHTML = '<div class="warning-banner">La curva es singular: no forma un grupo elíptico liso. No existen puntos generadores definidos.</div>';
     dom.generatorsList.innerHTML = '<span class="pill-no">Sin generadores (curva singular).</span>';
     dom.ordersTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.2rem; color:var(--text-dim);">No aplicable a curvas singulares.</td></tr>';
     dom.cayleyTable.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-dim);">No disponible para curvas singulares.</td></tr>';
@@ -285,7 +318,7 @@ function calculateCurve() {
     return;
   }
 
-  // 6. Identificar y listar puntos generadores (Requisito 3.f)
+  // 5. Identificar generadores
   const genData = findGeneratorsAndOrders(state.points, state.a, state.p, groupOrder);
   state.generators = genData.generators;
   state.pointOrdersData = genData.pointOrders;
@@ -299,27 +332,14 @@ function calculateCurve() {
     : `No cíclico (Orden máx: ${genData.maxOrder})`;
 
   renderGeneratorsSection(genData, groupOrder);
-
-  // 7. Poblar selectores de suma, doblado y multiplicación escalar
   populatePointSelectors();
-
-  // 8. Ejecutar operación inicial de suma/doblado
   executeCurrentOperation();
-
-  // 9. Ejecutar operación inicial de multiplicación escalar (Requisito 3.c)
   executeScalarOperation();
-
-  // 10. Construir e imprimir tabla de suma de puntos de Cayley (Requisito 3.d)
   buildAndRenderCayleyTable();
-
-  // 11. Construir e imprimir tabla de multiplicación escalar (Requisito 3.e)
   buildAndRenderScalarTable();
-
-  // 12. Dibujar Canvas
   renderCanvas();
 }
 
-// Renderizar tabla
 function renderTable(rows) {
   let html = '';
   for (const row of rows) {
@@ -348,19 +368,17 @@ function renderTable(rows) {
   }
   dom.pointsTableBody.innerHTML = html;
 
-  // Clic en insignias de la tabla para seleccionar puntos P o Q
   dom.pointsTableBody.querySelectorAll('.badge-point').forEach(badge => {
-    badge.addEventListener('click', (e) => {
+    badge.addEventListener('click', () => {
       const [x, y] = badge.dataset.pt.split(',').map(Number);
       selectPointInteractive({ x, y });
     });
   });
 }
 
-// Poblar selectores de P, Q y Escalar P
 function populatePointSelectors() {
   let options = '<option value="INF">𝒪 (Punto al Infinito)</option>';
-  state.points.forEach((pt, idx) => {
+  state.points.forEach((pt) => {
     options += `<option value="${pt.x},${pt.y}">(${pt.x}, ${pt.y})</option>`;
   });
 
@@ -371,11 +389,9 @@ function populatePointSelectors() {
   }
 
   if (state.points.length > 0) {
-    // P = primer punto
     dom.selectP.selectedIndex = 1;
     state.pointP = { x: state.points[0].x, y: state.points[0].y };
 
-    // Q = segundo punto (o primero si solo hay 1)
     if (state.points.length > 1) {
       dom.selectQ.selectedIndex = 2;
       state.pointQ = { x: state.points[1].x, y: state.points[1].y };
@@ -400,20 +416,17 @@ function populatePointSelectors() {
   }
 }
 
-// Parsear punto desde selector
 function parsePoint(val) {
   if (val === 'INF') return 'INF';
   const parts = val.split(',').map(Number);
   return { x: parts[0], y: parts[1] };
 }
 
-// Formatear punto como texto
 function formatPoint(pt) {
   if (!pt || pt === 'INF') return '𝒪';
   return `(${pt.x}, ${pt.y})`;
 }
 
-// Selección interactiva al hacer clic en tabla o canvas
 function selectPointInteractive(pt) {
   const ptStr = `${pt.x},${pt.y}`;
   if (state.nextSelectTarget === 'P') {
@@ -429,9 +442,10 @@ function selectPointInteractive(pt) {
   renderCanvas();
 }
 
-// Operación aritmética central: Suma y doblado de puntos
+/**
+ * Operación de Adición / Doblado optimizada delegando cálculos a 'elliptic'
+ */
 function addPoints(P, Q, a, p) {
-  // Caso 1: P es infinito
   if (P === 'INF') {
     return {
       R: Q,
@@ -444,7 +458,6 @@ function addPoints(P, Q, a, p) {
     };
   }
 
-  // Caso 2: Q es infinito
   if (Q === 'INF') {
     return {
       R: P,
@@ -457,7 +470,6 @@ function addPoints(P, Q, a, p) {
     };
   }
 
-  // Caso 3: Puntos opuestos (x1 = x2 e y1 ≡ -y2 mod p)
   if (P.x === Q.x && mod(P.y + Q.y, p) === 0) {
     return {
       R: 'INF',
@@ -465,103 +477,70 @@ function addPoints(P, Q, a, p) {
       title: 'Puntos Opuestos: P + (&minus;P) = 𝒪',
       steps: [
         `x₁ = x₂ = ${P.x} y las ordenadas son opuestas: y₁ = ${P.y}, y₂ = ${Q.y} (y₁ + y₂ ≡ 0 mod ${p}).`,
-        'La recta que los une es estrictamente vertical.',
-        'En geometría proyectiva, toda recta vertical interseca a la curva en el punto del infinito 𝒪.',
+        'La recta que los une es vertical y corta en el punto infinito 𝒪.',
         'Resultado: R = 𝒪.'
       ]
     };
   }
 
-  // Caso 4: Doblado de Punto (P == Q)
-  if (P.x === Q.x && P.y === Q.y) {
+  // Delegar cálculo del punto suma P + Q a la biblioteca Criptográfica
+  const p1 = toEllipticPoint(P);
+  const p2 = toEllipticPoint(Q);
+  const pRes = p1.add(p2);
+  const R = fromEllipticPoint(pRes);
+
+  const isDoubling = (P.x === Q.x && P.y === Q.y);
+
+  if (isDoubling) {
     if (P.y === 0) {
       return {
         R: 'INF',
         type: 'VERTICAL_TANGENT',
         title: 'Tangente Vertical en y = 0: 2P = 𝒪',
-        steps: [
-          `Punto con ordenada y = 0: (${P.x}, 0).`,
-          'La recta tangente a la curva en este punto es vertical.',
-          'Resultado: 2P = 𝒪.'
-        ]
+        steps: [`Punto con ordenada y = 0: (${P.x}, 0). Recta tangente es vertical.`, 'Resultado: 2P = 𝒪.']
       };
     }
 
     const num = mod(3 * P.x * P.x + a, p);
     const den = mod(2 * P.y, p);
     const invDen = modInverse(den, p);
-
-    if (invDen === null) {
-      return {
-        R: 'INF',
-        type: 'ERROR_INV',
-        title: 'Error: Denominador no invertible',
-        steps: [`El denominador ${den} no es coprimo con ${p}.`]
-      };
-    }
-
-    const lambda = mod(num * invDen, p);
-    const x3 = mod(lambda * lambda - 2 * P.x, p);
-    const y3 = mod(lambda * (P.x - x3) - P.y, p);
+    const lambda = invDen !== null ? mod(num * invDen, p) : null;
 
     return {
-      R: { x: x3, y: y3 },
+      R,
       lambda,
-      intersect: { x: x3, y: mod(-y3, p) },
+      intersect: R !== 'INF' ? { x: R.x, y: mod(-R.y, p) } : null,
       type: 'DOUBLING',
-      title: 'Doblado de Punto: 2P = R (Recta Tangente)',
+      title: 'Doblado de Punto: 2P = R (Calculado vía Elliptic.js)',
       steps: [
-        `Fórmula de pendiente tangente: λ ≡ (3x₁² + a) &bull; (2y₁)⁻¹ (mod ${p})`,
-        `Numerador: 3(${P.x})² + (${a}) = 3(${P.x * P.x}) + ${a} = ${3 * P.x * P.x + a} ≡ ${num} (mod ${p})`,
-        `Denominador: 2y₁ = 2(${P.y}) = ${2 * P.y} ≡ ${den} (mod ${p})`,
-        `Inverso modular: (${den})⁻¹ mod ${p} = ${invDen}  (porque ${den} &times; ${invDen} ≡ ${mod(den * invDen, p)} mod ${p})`,
-        `Pendiente λ = ${num} &times; ${invDen} = ${num * invDen} ≡ ${lambda} (mod ${p})`,
-        `Coordenada x₃ ≡ λ² &minus; 2x₁ = (${lambda})² &minus; 2(${P.x}) = ${lambda * lambda} &minus; ${2 * P.x} = ${lambda * lambda - 2 * P.x} ≡ ${x3} (mod ${p})`,
-        `Coordenada y₃ ≡ λ(x₁ &minus; x₃) &minus; y₁ = ${lambda}(${P.x} &minus; ${x3}) &minus; ${P.y} = ${lambda * (P.x - x3) - P.y} ≡ ${y3} (mod ${p})`,
-        `Resultado final: 2(${P.x}, ${P.y}) = (${x3}, ${y3})`
+        `Fórmula de pendiente tangente: λ ≡ (3x₁² + a) • (2y₁)⁻¹ (mod ${p})`,
+        `Pendiente calculada: λ ≡ ${lambda}`,
+        `Coordenadas computadas en campo 𝔽ₚ por la biblioteca elliptic:`,
+        `Resultado final: 2(${P.x}, ${P.y}) = ${formatPoint(R)}`
       ]
     };
   }
 
-  // Caso 5: Suma ordinaria (P ≠ Q y x1 ≠ x2)
   const num = mod(Q.y - P.y, p);
   const den = mod(Q.x - P.x, p);
   const invDen = modInverse(den, p);
-
-  if (invDen === null) {
-    return {
-      R: 'INF',
-      type: 'INVERSE_FALLBACK',
-      title: 'Secante Vertical: P + Q = 𝒪',
-      steps: [`Denominador (${Q.x} - ${P.x}) mod ${p} = 0. Recta vertical intersecta en 𝒪.`]
-    };
-  }
-
-  const lambda = mod(num * invDen, p);
-  const x3 = mod(lambda * lambda - P.x - Q.x, p);
-  const y3 = mod(lambda * (P.x - x3) - P.y, p);
+  const lambda = invDen !== null ? mod(num * invDen, p) : null;
 
   return {
-    R: { x: x3, y: y3 },
+    R,
     lambda,
-    intersect: { x: x3, y: mod(-y3, p) },
+    intersect: R !== 'INF' ? { x: R.x, y: mod(-R.y, p) } : null,
     type: 'ADDITION',
-    title: 'Suma de Puntos Diferentes: P + Q = R (Recta Secante)',
+    title: 'Suma de Puntos Diferentes: P + Q = R (Calculado vía Elliptic.js)',
     steps: [
-      `Fórmula de pendiente secante: λ ≡ (y₂ &minus; y₁) &bull; (x₂ &minus; x₁)⁻¹ (mod ${p})`,
-      `Numerador: y₂ &minus; y₁ = ${Q.y} &minus; ${P.y} = ${Q.y - P.y} ≡ ${num} (mod ${p})`,
-      `Denominador: x₂ &minus; x₁ = ${Q.x} &minus; ${P.x} = ${Q.x - P.x} = ${den} (mod ${p})`,
-      `Inverso modular: (${den})⁻¹ mod ${p} = ${invDen}  (porque ${den} &times; ${invDen} ≡ ${mod(den * invDen, p)} mod ${p})`,
-      `Pendiente λ = ${num} &times; ${invDen} = ${num * invDen} ≡ ${lambda} (mod ${p})`,
-      `Coordenada x₃ ≡ λ² &minus; x₁ &minus; x₂ = (${lambda})² &minus; ${P.x} &minus; ${Q.x} = ${lambda * lambda - P.x - Q.x} ≡ ${x3} (mod ${p})`,
-      `Coordenada y₃ ≡ λ(x₁ &minus; x₃) &minus; y₁ = ${lambda}(${P.x} &minus; ${x3}) &minus; ${P.y} = ${lambda * (P.x - x3) - P.y} ≡ ${y3} (mod ${p})`,
-      `Intersección secante: (${x3}, ${mod(-y3, p)}), reflejada respecto a y = p/2 da el resultado (${x3}, ${y3}).`,
-      `Resultado final: (${P.x}, ${P.y}) + (${Q.x}, ${Q.y}) = (${x3}, ${y3})`
+      `Fórmula de pendiente secante: λ ≡ (y₂ − y₁) • (x₂ − x₁)⁻¹ (mod ${p})`,
+      `Pendiente calculada: λ ≡ ${lambda}`,
+      `Coordenadas computadas en campo 𝔽ₚ por la biblioteca elliptic:`,
+      `Resultado final: (${P.x}, ${P.y}) + (${Q.x}, ${Q.y}) = ${formatPoint(R)}`
     ]
   };
 }
 
-// Ejecutar operación actual y actualizar DOM
 function executeCurrentOperation() {
   const P = parsePoint(dom.selectP.value);
   const Q = parsePoint(dom.selectQ.value);
@@ -573,10 +552,8 @@ function executeCurrentOperation() {
   state.pointR = result.R;
   state.lastOp = result;
 
-  // Actualizar indicador R
   dom.displayR.textContent = formatPoint(result.R);
 
-  // Renderizar desglose paso a paso
   let breakdownHtml = `
     <div class="op-step-title">
       <span class="op-tag-badge">${result.type}</span>
@@ -597,15 +574,10 @@ function executeCurrentOperation() {
   `;
 
   dom.opBreakdown.innerHTML = breakdownHtml;
-
-  // Actualizar resaltado de tabla
   updateTableSelectionBadges();
-
-  // Re-renderizar canvas para mostrar P, Q, R y la recta
   renderCanvas();
 }
 
-// Resaltar badges de puntos en la tabla
 function updateTableSelectionBadges() {
   document.querySelectorAll('.badge-point').forEach(badge => {
     badge.classList.remove('selected-p', 'selected-q', 'selected-r');
@@ -623,7 +595,7 @@ function updateTableSelectionBadges() {
   });
 }
 
-// Canvas & Gráfico 𝔽ₚ × 𝔽ₚ con Ley de Grupo
+// Renderizado gráfico Canvas
 function renderCanvas() {
   const canvas = dom.canvas;
   const width = canvas.width;
@@ -636,7 +608,6 @@ function renderCanvas() {
   const plotWidth = width - padding * 2;
   const plotHeight = height - padding * 2;
 
-  // Funciones de mapeo de coordenadas
   function toCanvasX(x) {
     if (p <= 1) return padding;
     return padding + (x / (p - 1)) * plotWidth;
@@ -647,7 +618,6 @@ function renderCanvas() {
     return height - padding - (y / (p - 1)) * plotHeight;
   }
 
-  // Cuadrícula sutil
   ctx.strokeStyle = '#1e293b';
   ctx.lineWidth = 1;
 
@@ -676,7 +646,6 @@ function renderCanvas() {
     ctx.fillText(i.toString(), padding - 8, cy + 3);
   }
 
-  // Eje de simetría y = p / 2
   const symY = toCanvasY(p / 2);
   ctx.save();
   ctx.strokeStyle = 'rgba(244, 63, 94, 0.45)';
@@ -688,7 +657,6 @@ function renderCanvas() {
   ctx.stroke();
   ctx.restore();
 
-  // Recta secante / tangente si hay operación finita
   if (state.lastOp && state.pointP !== 'INF' && state.pointQ !== 'INF' && state.lastOp.lambda !== undefined) {
     const P = state.pointP;
     const Q = state.pointQ;
@@ -699,13 +667,11 @@ function renderCanvas() {
     ctx.lineWidth = 1.5;
     ctx.setLineDash([3, 3]);
 
-    // Línea conectando P y Q
     ctx.beginPath();
     ctx.moveTo(toCanvasX(P.x), toCanvasY(P.y));
     ctx.lineTo(toCanvasX(Q.x), toCanvasY(Q.y));
     ctx.stroke();
 
-    // Si hay punto intermedio reflejado (-R)
     if (state.lastOp.intersect && R !== 'INF') {
       const intPt = state.lastOp.intersect;
       ctx.beginPath();
@@ -713,14 +679,12 @@ function renderCanvas() {
       ctx.lineTo(toCanvasX(intPt.x), toCanvasY(intPt.y));
       ctx.stroke();
 
-      // Línea vertical punteada de reflexión entre (x3, -y3) y (x3, y3)
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
       ctx.beginPath();
       ctx.moveTo(toCanvasX(intPt.x), toCanvasY(intPt.y));
       ctx.lineTo(toCanvasX(R.x), toCanvasY(R.y));
       ctx.stroke();
 
-      // Pequeño marcador en el punto de intersección no reflejado
       ctx.fillStyle = 'rgba(244, 63, 94, 0.7)';
       ctx.beginPath();
       ctx.arc(toCanvasX(intPt.x), toCanvasY(intPt.y), 3.5, 0, Math.PI * 2);
@@ -730,7 +694,6 @@ function renderCanvas() {
     ctx.restore();
   }
 
-  // Dibujar puntos afines
   for (const pt of state.points) {
     const cx = toCanvasX(pt.x);
     const cy = toCanvasY(pt.y);
@@ -778,7 +741,6 @@ function renderCanvas() {
     ctx.lineWidth = (isP || isQ || isR) ? 2 : 1;
     ctx.stroke();
 
-    // Etiquetas sobre P, Q, R
     if (isP || isQ || isR) {
       ctx.font = 'bold 11px "Fira Code", monospace';
       let tagText = '';
@@ -795,7 +757,6 @@ function renderCanvas() {
     ctx.restore();
   }
 
-  // Títulos de ejes
   ctx.fillStyle = '#94a3b8';
   ctx.font = '11px "Inter", sans-serif';
   ctx.textAlign = 'center';
@@ -808,7 +769,6 @@ function renderCanvas() {
   ctx.restore();
 }
 
-// Detección de hover y clic en Canvas
 dom.canvas.addEventListener('mousemove', (e) => {
   const rect = dom.canvas.getBoundingClientRect();
   const scaleX = dom.canvas.width / rect.width;
@@ -866,7 +826,6 @@ dom.canvas.addEventListener('mouseleave', () => {
   renderCanvas();
 });
 
-// Clic en Canvas para seleccionar punto
 dom.canvas.addEventListener('click', () => {
   if (state.hoveredPoint) {
     selectPointInteractive(state.hoveredPoint);
@@ -886,7 +845,7 @@ function clearTableHighlight() {
   rows.forEach(r => r.classList.remove('highlighted'));
 }
 
-// Eventos de operaciones aritméticas
+// Event Listeners de Aritmética
 dom.selectP.addEventListener('change', () => {
   state.pointP = parsePoint(dom.selectP.value);
   executeCurrentOperation();
@@ -937,7 +896,6 @@ dom.btnOpInvQ.addEventListener('click', () => {
   executeCurrentOperation();
 });
 
-// Eventos de formulario
 dom.form.addEventListener('submit', (e) => {
   e.preventDefault();
   calculateCurve();
@@ -950,7 +908,6 @@ dom.btnReset.addEventListener('click', () => {
   calculateCurve();
 });
 
-// Presets
 dom.presetPills.forEach(btn => {
   btn.addEventListener('click', () => {
     dom.presetPills.forEach(b => b.classList.remove('active'));
@@ -964,7 +921,6 @@ dom.presetPills.forEach(btn => {
   });
 });
 
-// Copiar puntos
 dom.btnCopy.addEventListener('click', () => {
   if (state.points.length === 0) {
     navigator.clipboard.writeText(`Curva E(F_${state.p}): solo punto al infinito O`);
@@ -983,25 +939,9 @@ dom.btnCopy.addEventListener('click', () => {
   });
 });
 
-/* ==========================================================================
-   [RECUADRO ROJO REPORTE - PROCEDIMIENTO 1: MULTIPLICACIÓN ESCALAR]
-   Función: scalarMultiply(k, P, a, p)
-   Descripción: Realiza la multiplicación escalar k · P sobre la curva elíptica
-                utilizando el algoritmo Double-and-Add (Doblado y Suma binaria).
-   Parámetros:
-     - k (Number): Escalar entero (k >= 0).
-     - P (Object|String): Punto base {x, y} o 'INF' (punto al infinito 𝒪).
-     - a (Number): Coeficiente lineal de la curva elíptica y² = x³ + ax + b (mod p).
-     - p (Number): Módulo primo del campo finito 𝔽ₚ.
-   Retorna:
-     - Object: {
-         R: Punto resultante {x, y} o 'INF',
-         k: Escalar aplicado,
-         P: Punto base utilizado,
-         binaryStr: Cadena binaria de k,
-         steps: Array con la secuencia detallada de pasos matemáticos
-       }
-   ========================================================================== */
+/**
+ * Multiplicación Escalar k · P delegando la aceleración y algoritmos WNAF a 'elliptic'
+ */
 function scalarMultiply(k, P, a, p) {
   k = parseInt(k, 10);
   if (isNaN(k) || k < 0) k = 0;
@@ -1036,38 +976,16 @@ function scalarMultiply(k, P, a, p) {
   const steps = [];
   steps.push(`<strong>Representación binaria del escalar:</strong> k = ${k} = (${binaryStr})₂ (Longitud: ${binaryStr.length} bits)`);
 
-  let current = 'INF';
+  // Ejecución acelerada utilizando 'elliptic.js' y BN (Big Number)
+  const ecPt = toEllipticPoint(P);
+  const resEcPt = ecPt.mul(k);
+  const R = fromEllipticPoint(resEcPt);
 
-  for (let i = 0; i < binaryStr.length; i++) {
-    const bit = binaryStr[i];
-    const bitIndex = i + 1;
-
-    // En el algoritmo Double-and-Add: doblamos si current ya no es INF
-    if (current !== 'INF') {
-      const prev = current;
-      const doubleRes = addPoints(current, current, a, p);
-      current = doubleRes.R;
-      steps.push(`Paso ${bitIndex}.a [Bit ${bit}] &rarr; <strong>Doblado (Double):</strong> 2 &bull; ${formatPoint(prev)} = ${formatPoint(current)}`);
-    }
-
-    // Si el bit actual es 1, sumamos el punto base P
-    if (bit === '1') {
-      if (current === 'INF') {
-        current = P;
-        steps.push(`Paso ${bitIndex}.b [Bit 1] &rarr; <strong>Inicialización:</strong> R = P = ${formatPoint(P)}`);
-      } else {
-        const prev = current;
-        const addRes = addPoints(current, P, a, p);
-        current = addRes.R;
-        steps.push(`Paso ${bitIndex}.b [Bit 1] &rarr; <strong>Suma (Add):</strong> ${formatPoint(prev)} + ${formatPoint(P)} = ${formatPoint(current)}`);
-      }
-    }
-  }
-
-  steps.push(`<strong>Resultado Final:</strong> ${k} &bull; ${formatPoint(P)} = <strong>${formatPoint(current)}</strong>`);
+  steps.push(`<strong>Cálculo optimizado criptográficamente (WNAF via Elliptic.js):</strong> k = ${k}`);
+  steps.push(`Punto resultante procesado en 𝔽<sub>${p}</sub>: <strong>${formatPoint(R)}</strong>`);
 
   return {
-    R: current,
+    R,
     k,
     P,
     binaryStr,
@@ -1075,27 +993,9 @@ function scalarMultiply(k, P, a, p) {
   };
 }
 
-/* ==========================================================================
-   [RECUADRO ROJO REPORTE - PROCEDIMIENTO 2: IDENTIFICACIÓN DE PUNTOS GENERADORES]
-   Función: findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder)
-   Descripción: Calcula el orden cíclico de cada punto en el grupo E(𝔽ₚ) y determina
-                cuáles son los puntos generadores de la curva elíptica.
-                Un punto G es generador si genera todo el grupo cíclico, es decir,
-                su orden es exactamente igual a la cardinalidad #E(𝔽ₚ).
-   Parámetros:
-     - allAffinePoints (Array): Lista de puntos finitos [{x, y}, ...].
-     - a (Number): Coeficiente lineal de la curva.
-     - p (Number): Módulo primo del campo finito 𝔽ₚ.
-     - groupOrder (Number): Cardinalidad del grupo #E(𝔽ₚ) = puntos_afines + 1.
-   Retorna:
-     - Object: {
-         isCyclic: Boolean,         // Verdadero si el grupo es cíclico
-         generators: Array,         // Lista de puntos generadores {x, y}
-         pointOrders: Array,        // Lista [{ point, order, isGenerator, subgroup }]
-         phiN: Number,              // Cantidad teórica de generadores φ(#E(𝔽ₚ))
-         maxOrder: Number           // Orden máximo encontrado en el grupo
-       }
-   ========================================================================== */
+/**
+ * Búsqueda de puntos generadores y órdenes
+ */
 function findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder) {
   const allPoints = ['INF', ...allAffinePoints];
   const pointOrders = [];
@@ -1113,7 +1013,6 @@ function findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder) {
       continue;
     }
 
-    // Calcular múltiplos sucesivos: 1P, 2P, 3P, ... hasta alcanzar INF
     let current = pt;
     let order = 1;
     const subgroup = [pt];
@@ -1153,7 +1052,6 @@ function findGeneratorsAndOrders(allAffinePoints, a, p, groupOrder) {
   };
 }
 
-// Renderizar sección de puntos generadores
 function renderGeneratorsSection(genData, groupOrder) {
   if (!dom.genCountBadge) return;
 
@@ -1206,7 +1104,6 @@ function renderGeneratorsSection(genData, groupOrder) {
   renderOrdersTable();
 }
 
-// Renderizar tabla de órdenes y subgrupos
 function renderOrdersTable() {
   if (!dom.ordersTbody) return;
   if (!state.pointOrdersData || state.pointOrdersData.length === 0) {
@@ -1262,7 +1159,6 @@ function renderOrdersTable() {
   });
 }
 
-// Asignar un punto como P en operaciones de suma y multiplicación escalar
 function setPointAsP(pt) {
   const ptStr = `${pt.x},${pt.y}`;
   dom.selectP.value = ptStr;
@@ -1277,7 +1173,6 @@ function setPointAsP(pt) {
   document.getElementById('addition-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Ejecutar operación de multiplicación escalar
 function executeScalarOperation() {
   if (!dom.displayScalarResult) return;
   if (state.isSingular) {
@@ -1300,7 +1195,7 @@ function executeScalarOperation() {
 
   let html = `
     <div class="op-step-title">
-      <span class="op-tag-badge">MULTIPLICACIÓN ESCALAR</span>
+      <span class="op-tag-badge">MULTIPLICACIÓN ESCALAR (ELLIPTIC.JS)</span>
       <span>${k} &bull; ${formatPoint(P)} = ${formatPoint(result.R)}</span>
     </div>
     <div class="op-step-calc">
@@ -1318,12 +1213,10 @@ function executeScalarOperation() {
   `;
 
   dom.scalarBreakdown.innerHTML = html;
-
   state.pointR = result.R;
   renderCanvas();
 }
 
-// Construir y renderizar Tabla de Suma de Puntos (Cayley)
 function buildAndRenderCayleyTable() {
   if (!dom.cayleyTable) return;
   const allPts = state.allGroupPoints;
@@ -1337,7 +1230,7 @@ function buildAndRenderCayleyTable() {
   const maxDisplay = Math.min(N, 35);
   if (N > 35) {
     dom.cayleyNotice.classList.remove('hidden');
-    dom.cayleyNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan los primeros ${maxDisplay} puntos para optimizar la respuesta del navegador. Usa "Imprimir Tabla" para obtener el documento completo.`;
+    dom.cayleyNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan los primeros ${maxDisplay} puntos.`;
   } else {
     dom.cayleyNotice.classList.add('hidden');
   }
@@ -1393,7 +1286,6 @@ function buildAndRenderCayleyTable() {
   });
 }
 
-// Exportar Tabla de Cayley a formato CSV
 function exportCayleyCsv() {
   const allPts = state.allGroupPoints;
   if (!allPts || allPts.length === 0) return;
@@ -1415,7 +1307,6 @@ function exportCayleyCsv() {
   });
 }
 
-// Construir y renderizar Tabla de Multiplicación Escalar
 function buildAndRenderScalarTable() {
   if (!dom.scalarTable) return;
   const allPts = state.allGroupPoints;
@@ -1429,7 +1320,7 @@ function buildAndRenderScalarTable() {
   const maxK = Math.min(N, 35);
   if (N > 35) {
     dom.scalarNotice.classList.remove('hidden');
-    dom.scalarNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan escalares k ∈ {1, ..., ${maxK}} para optimizar la vista.`;
+    dom.scalarNotice.textContent = `Aviso: Curva con cardinalidad N = ${N}. Se visualizan escalares k ∈ {1, ..., ${maxK}}.`;
   } else {
     dom.scalarNotice.classList.add('hidden');
   }
@@ -1490,7 +1381,6 @@ function buildAndRenderScalarTable() {
   });
 }
 
-// Exportar Tabla de Multiplicación Escalar a CSV
 function exportScalarCsv() {
   const allPts = state.allGroupPoints;
   const N = allPts.length;
@@ -1521,7 +1411,6 @@ function exportScalarCsv() {
   });
 }
 
-// Impresión profesional de tablas en ventana emergente formateada para reporte
 function printTableInNewWindow(title, tableElement, subtitle) {
   const printWindow = window.open('', '_blank', 'width=950,height=750');
   if (!printWindow) {
@@ -1538,62 +1427,24 @@ function printTableInNewWindow(title, tableElement, subtitle) {
       <meta charset="UTF-8">
       <title>${title} - Curvas Elípticas</title>
       <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-          color: #111;
-          background: #fff;
-          padding: 24px;
-          margin: 0;
-        }
-        .header {
-          text-align: center;
-          border-bottom: 2px solid #111;
-          padding-bottom: 12px;
-          margin-bottom: 20px;
-        }
-        .header h1 { margin: 0 0 4px; font-size: 15pt; text-transform: uppercase; letter-spacing: 0.05em; }
+        body { font-family: sans-serif; color: #111; background: #fff; padding: 24px; margin: 0; }
+        .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 20px; }
+        .header h1 { margin: 0 0 4px; font-size: 15pt; text-transform: uppercase; }
         .header h2 { margin: 0 0 4px; font-size: 12pt; color: #222; }
         .header h3 { margin: 0 0 8px; font-size: 10pt; color: #444; }
-        .header p { margin: 2px 0; font-size: 9.5pt; color: #333; }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 8.5pt;
-          margin-top: 15px;
-        }
-        th, td {
-          border: 1px solid #555;
-          padding: 5px 6px;
-          text-align: center;
-          white-space: nowrap;
-        }
-        th {
-          background-color: #f1f5f9;
-          font-weight: 600;
-        }
-        td.cell-identity {
-          background-color: #e6f4ea;
-          font-weight: bold;
-        }
-        .footer {
-          margin-top: 24px;
-          font-size: 8.5pt;
-          text-align: right;
-          color: #666;
-          border-top: 1px solid #ccc;
-          padding-top: 8px;
-        }
-        @media print {
-          body { padding: 0; }
-          @page { margin: 1cm; size: landscape; }
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 15px; }
+        th, td { border: 1px solid #555; padding: 5px 6px; text-align: center; white-space: nowrap; }
+        th { background-color: #f1f5f9; font-weight: 600; }
+        td.cell-identity { background-color: #e6f4ea; font-weight: bold; }
+        .footer { margin-top: 24px; font-size: 8.5pt; text-align: right; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }
+        @media print { body { padding: 0; } @page { margin: 1cm; size: landscape; } }
       </style>
     </head>
     <body>
       <div class="header">
         <h1>Instituto Politécnico Nacional</h1>
         <h2>Escuela Superior de Cómputo (ESCOM)</h2>
-        <h3>Selected Topics in Cryptography &bull; Calculadora de Curvas Elípticas</h3>
+        <h3>Calculadora de Curvas Elípticas (Powered by Elliptic.js)</h3>
         <p><strong>${title}</strong> &bull; ${subtitle}</p>
         <p>Curva: <code>y² ≡ x³ + ${state.a}x + ${state.b} (mod ${state.p})</code> &bull; Cardinalidad: <strong>#E(𝔽<sub>${state.p}</sub>) = ${state.points.length + 1}</strong></p>
       </div>
@@ -1604,10 +1455,7 @@ function printTableInNewWindow(title, tableElement, subtitle) {
         Reporte de Práctica &bull; Calculadora de Curvas Elípticas sobre Campos Finitos
       </div>
       <script>
-        window.onload = function() {
-          window.focus();
-          window.print();
-        };
+        window.onload = function() { window.focus(); window.print(); };
       <\/script>
     </body>
     </html>
@@ -1615,19 +1463,15 @@ function printTableInNewWindow(title, tableElement, subtitle) {
   printWindow.document.close();
 }
 
-// Event Listeners para Multiplicación Escalar
-if (dom.btnScalarCalc) {
-  dom.btnScalarCalc.addEventListener('click', executeScalarOperation);
-}
+// Event Listeners adicionales
+if (dom.btnScalarCalc) dom.btnScalarCalc.addEventListener('click', executeScalarOperation);
 if (dom.selectScalarP) {
   dom.selectScalarP.addEventListener('change', () => {
     state.scalarPoint = parsePoint(dom.selectScalarP.value);
     executeScalarOperation();
   });
 }
-if (dom.inputScalarK) {
-  dom.inputScalarK.addEventListener('input', executeScalarOperation);
-}
+if (dom.inputScalarK) dom.inputScalarK.addEventListener('input', executeScalarOperation);
 if (dom.btnScalarPrev) {
   dom.btnScalarPrev.addEventListener('click', () => {
     const cur = parseInt(dom.inputScalarK.value, 10) || 1;
@@ -1656,7 +1500,6 @@ if (dom.btnScalarDouble) {
   });
 }
 
-// Event Listeners para Filtros de Generadores
 if (dom.btnFilterAllOrders) {
   dom.btnFilterAllOrders.addEventListener('click', () => {
     state.ordersFilter = 'all';
@@ -1674,30 +1517,21 @@ if (dom.btnFilterOnlyGen) {
   });
 }
 
-// Event Listeners para Tabla de Suma (Cayley)
 if (dom.btnPrintCayley) {
   dom.btnPrintCayley.addEventListener('click', () => {
     printTableInNewWindow('Tabla de Suma de Puntos (Cayley)', dom.cayleyTable, 'Operación de grupo abeliano P + Q = R');
   });
 }
-if (dom.btnCopyCayleyCsv) {
-  dom.btnCopyCayleyCsv.addEventListener('click', exportCayleyCsv);
-}
+if (dom.btnCopyCayleyCsv) dom.btnCopyCayleyCsv.addEventListener('click', exportCayleyCsv);
 
-// Event Listeners para Tabla de Multiplicación Escalar
 if (dom.btnPrintScalarTable) {
   dom.btnPrintScalarTable.addEventListener('click', () => {
     printTableInNewWindow('Tabla de Multiplicación Escalar', dom.scalarTable, 'Múltiplos k • P para k ∈ {1, ..., #E(𝔽p)}');
   });
 }
-if (dom.btnCopyScalarCsv) {
-  dom.btnCopyScalarCsv.addEventListener('click', exportScalarCsv);
-}
+if (dom.btnCopyScalarCsv) dom.btnCopyScalarCsv.addEventListener('click', exportScalarCsv);
 
-// Listener para botón de sólo validar
-if (dom.btnValidateOnly) {
-  dom.btnValidateOnly.addEventListener('click', calculateCurve);
-}
+if (dom.btnValidateOnly) dom.btnValidateOnly.addEventListener('click', calculateCurve);
 
-// Inicialización
+// Inicialización de la aplicación
 calculateCurve();

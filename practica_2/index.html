@@ -66,7 +66,7 @@
       <section class="card verification-card">
         <h2 class="card-title">Verificación de Singularidad</h2>
         <div class="formula-box">
-          <div class="formula-label">Condición de Suavidad:</div>
+          <div class="formula-label">Condición:</div>
           <div class="formula-code">4a³ + 27b² ≢ 0 (mod p)</div>
         </div>
 
@@ -410,7 +410,9 @@
       <p>Calculadora de Curvas Elípticas Finitas &bull; Aritmética de grupo completa &bull; Ecuación simétrica y ≡ p - y</p>
     </footer>
   </div>
-
+<!-- Builds listas para navegador (UMD), NO el código fuente crudo de npm -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
+  <!-- Script principal de la aplicación -->
   <script src="app.js"></script>
 </body>
 </html>
