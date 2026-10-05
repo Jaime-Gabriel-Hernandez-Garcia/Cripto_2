@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f3f1e9">
+  <title>ECDH de tres participantes | Práctica 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/elliptic@6.5.5/dist/elliptic.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="back-link" href="../index.html" aria-label="Volver al portal">← <span>Laboratorio</span></a>
+      <span class="course-mark">CRIPTOGRAFÍA · PRÁCTICA 05</span>
+      <span class="curve-mark"><span class="live-dot"></span> P-256 / SECP256R1</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Acuerdo de clave de grupo · 3 participantes</p>
+        <h1 id="page-title">Una clave.<br><span>Tres caminos.</span></h1>
+        <p class="intro-copy">Alice, Bob y Candy intercambian puntos públicos y parciales para construir, cada quien por su cuenta, el mismo secreto compartido.</p>
+        <aside class="curve-note">
+          <span class="note-icon" aria-hidden="true">i</span>
+          <p><strong>¿Por qué P-256?</strong> Es la curva secp256r1, recomendada por NIST (FIPS 186-5) y ampliamente interoperable. Esta demostración sirve para aprender; no uses sus claves en producción.</p>
+        </aside>
+      </section>
+
+      <section class="participants-section" aria-labelledby="participants-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 — Identidades</p>
+            <h2 id="participants-title">Genera las claves</h2>
+          </div>
+          <button type="button" class="button button-quiet" id="generate-all">Generar las tres</button>
+        </div>
+
+        <div class="participant-grid">
+          <article class="participant alice" data-participant="alice">
+            <div class="participant-heading"><span class="avatar">A</span><div><h3>Alice</h3><span class="key-state" id="alice-state">Sin claves</span></div></div>
+            <button type="button" class="button button-outline generate-key" data-owner="alice">Generar par de claves</button>
+            <div class="key-field"><div class="field-heading"><label for="alice-public">Clave pública</label><button type="button" class="copy-button" data-copy="alice-public" aria-label="Copiar clave pública de Alice" title="Copiar clave pública">Copiar</button></div><textarea id="alice-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
+            <div class="key-field private-field"><div class="field-heading"><label for="alice-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="alice-private" aria-pressed="false">Revelar</button></div><textarea id="alice-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          </article>
+
+          <article class="participant bob" data-participant="bob">
+            <div class="participant-heading"><span class="avatar">B</span><div><h3>Bob</h3><span class="key-state" id="bob-state">Sin claves</span></div></div>
+            <button type="button" class="button button-outline generate-key" data-owner="bob">Generar par de claves</button>
+            <div class="key-field"><div class="field-heading"><label for="bob-public">Clave pública</label><button type="button" class="copy-button" data-copy="bob-public" aria-label="Copiar clave pública de Bob" title="Copiar clave pública">Copiar</button></div><textarea id="bob-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
+            <div class="key-field private-field"><div class="field-heading"><label for="bob-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="bob-private" aria-pressed="false">Revelar</button></div><textarea id="bob-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          </article>
+
+          <article class="participant candy" data-participant="candy">
+            <div class="participant-heading"><span class="avatar">C</span><div><h3>Candy</h3><span class="key-state" id="candy-state">Sin claves</span></div></div>
+            <button type="button" class="button button-outline generate-key" data-owner="candy">Generar par de claves</button>
+            <div class="key-field"><div class="field-heading"><label for="candy-public">Clave pública</label><button type="button" class="copy-button" data-copy="candy-public" aria-label="Copiar clave pública de Candy" title="Copiar clave pública">Copiar</button></div><textarea id="candy-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
+            <div class="key-field private-field"><div class="field-heading"><label for="candy-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="candy-private" aria-pressed="false">Revelar</button></div><textarea id="candy-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          </article>
+        </div>
+        <p class="private-warning"><span aria-hidden="true">!</span> Las claves privadas solo se revelan bajo demanda. En un acuerdo real, nunca se comparten ni se muestran.</p>
+      </section>
+
+      <section class="exchange-section" aria-labelledby="exchange-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">02 — Intercambio simulado por USB</p><h2 id="exchange-title">Tres rondas hasta el secreto</h2></div>
+          <div class="exchange-actions"><button type="button" class="button button-quiet" id="reset-exchange">Reiniciar</button><button type="button" class="button button-primary" id="next-step">Iniciar intercambio <span aria-hidden="true">→</span></button></div>
+        </div>
+
+        <div class="round-list" aria-live="polite">
+          <article class="round-item" id="round-1"><div class="round-number">01</div><div class="round-content"><div class="round-title"><h3>Claves públicas</h3><span class="round-status">Pendiente</span></div><p>Cada participante comparte su punto público: <code>A = aG</code>, <code>B = bG</code> y <code>C = cG</code>.</p><div class="round-data" id="round-1-data"><span>Esperando las tres claves públicas</span></div></div></article>
+          <article class="round-item pending" id="round-2"><div class="round-number">02</div><div class="round-content"><div class="round-title"><h3>Puntos parciales por USB</h3><span class="round-status">Pendiente</span></div><p>La memoria circula un punto: Alice calcula <code>aC</code>, Bob calcula <code>bA</code> y Candy calcula <code>cB</code>.</p><div class="round-data" id="round-2-data"><span>Esperando la primera ronda</span></div></div></article>
+          <article class="round-item pending" id="round-3"><div class="round-number">03</div><div class="round-content"><div class="round-title"><h3>Derivación independiente</h3><span class="round-status">Pendiente</span></div><p>Con el parcial recibido, cada participante calcula el punto <code>abcG</code> sin revelar su escalar privado.</p><div class="round-data" id="round-3-data"><span>Esperando la segunda ronda</span></div></div></article>
+        </div>
+        <div class="notice" id="app-message" role="status" aria-live="polite">Genera un par de claves para Alice, Bob y Candy para habilitar el intercambio.</div>
+      </section>
+
+      <section class="result-section" id="result-section" aria-labelledby="result-title" hidden>
+        <div class="result-heading"><div><p class="eyebrow">03 — Verificación</p><h2 id="result-title">El secreto coincide</h2></div><span class="verified-badge"><span aria-hidden="true">✓</span> Coincidencia verificada</span></div>
+        <p class="result-copy">Cada participante llegó al mismo punto <code>abcG</code>. Su coordenada X, codificada en hexadecimal, es el secreto de grupo de esta demostración.</p>
+        <div class="shared-secret" id="shared-secret"></div>
+        <div class="result-grid" id="participant-results"></div>
+        <p class="demo-caveat">Demostración académica: el punto compartido se usa aquí como resultado visual. En un protocolo de producción se deriva una clave simétrica con una KDF (por ejemplo, HKDF) y se autentican las identidades para evitar ataques de intermediario.</p>
+      </section>
+    </main>
+    <footer class="footer"><span>LABORATORIO DE CRIPTOGRAFÍA</span><span>ECDH · CURVA P-256</span></footer>
+  </div>
+</body>
+</html>
