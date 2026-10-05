@@ -2,92 +2,404 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f3f1e9">
-  <title>ECDH de tres participantes | Práctica 5</title>
+  <title>Intercambio de Claves ECDH Tripartito | Práctica 03</title>
+  
+  <!-- Google Fonts: Inter & Fira Code (Misma familia tipográfica que Práctica 1 y 2) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/elliptic@6.5.5/dist/elliptic.min.js"></script>
+  
+  <!-- Soporte local offline prioritario + fallback CDN -->
+  <script src="elliptic.min.js"></script>
+  <script>
+    if (!window.elliptic) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"><\/script>');
+    }
+  </script>
   <script defer src="script.js"></script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="topbar">
-      <a class="back-link" href="../index.html" aria-label="Volver al portal">← <span>Laboratorio</span></a>
-      <span class="course-mark">CRIPTOGRAFÍA · PRÁCTICA 05</span>
-      <span class="curve-mark"><span class="live-dot"></span> P-256 / SECP256R1</span>
+  <div class="app-container">
+    
+    <!-- Encabezado Estilizado unificado con Práctica 1 y 2 -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-top">
+          <span class="badge">Criptografía Asimétrica &amp; Curvas Elípticas</span>
+          <span class="badge badge-sub">Práctica 03</span>
+        </div>
+        <h1>Intercambio de Claves ECDH Tripartito</h1>
+        <p class="subtitle">
+          Acuerdo de clave de grupo (Group Key Exchange) de 3 participantes sobre <code>NIST P-256 / secp256r1</code>
+        </p>
+      </div>
+
+      <div class="preset-pills">
+        <a href="../index.html" class="pill-btn" style="text-decoration:none;">&larr; Portal Principal</a>
+        <span class="preset-label">Acciones rápidas:</span>
+        <button type="button" class="pill-btn active" id="btn-quick-generate-all">⚡ Generar las 3 Claves</button>
+        <button type="button" class="pill-btn" id="btn-quick-run-flow">▶ Simular Flujo Completo</button>
+        <button type="button" class="pill-btn danger-pill" id="btn-quick-reset">🔄 Reiniciar</button>
+        <span class="pill-btn static-pill">
+          <span class="live-dot"></span> P-256 (FIPS 186-5)
+        </span>
+      </div>
     </header>
 
-    <main>
-      <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">Acuerdo de clave de grupo · 3 participantes</p>
-        <h1 id="page-title">Una clave.<br><span>Tres caminos.</span></h1>
-        <p class="intro-copy">Alice, Bob y Candy intercambian puntos públicos y parciales para construir, cada quien por su cuenta, el mismo secreto compartido.</p>
-        <aside class="curve-note">
-          <span class="note-icon" aria-hidden="true">i</span>
-          <p><strong>¿Por qué P-256?</strong> Es la curva secp256r1, recomendada por NIST (FIPS 186-5) y ampliamente interoperable. Esta demostración sirve para aprender; no uses sus claves en producción.</p>
-        </aside>
-      </section>
+    <!-- Banner global de estado / notificaciones -->
+    <div class="status-banner info-status" id="app-message" role="status" aria-live="polite">
+      <span class="status-icon">ℹ</span>
+      <span class="status-text">Genera un par de claves para Alice, Bob y Candy para comenzar la simulación del intercambio cíclico.</span>
+    </div>
 
-      <section class="participants-section" aria-labelledby="participants-title">
-        <div class="section-heading">
+    <main class="main-grid">
+      
+      <!-- ========================================================
+           SECCIÓN 1: IDENTIDADES Y GENERACIÓN DE CLAVES
+           ======================================================== -->
+      <section class="card full-width">
+        <div class="card-header-flex">
           <div>
-            <p class="eyebrow">01 — Identidades</p>
-            <h2 id="participants-title">Genera las claves</h2>
+            <span class="card-tag">FASE 01 &bull; IDENTIDADES CRIPTOGRÁFICAS</span>
+            <h2 class="card-title">Generación de Pares de Claves (P-256)</h2>
           </div>
-          <button type="button" class="button button-quiet" id="generate-all">Generar las tres</button>
+          <button type="button" class="btn primary-btn" id="generate-all">
+            <span>✨</span> Generar las 3 Identidades
+          </button>
         </div>
+        <p class="section-desc">
+          Cada participante selecciona de manera aleatoria y segura un escalar privado <code>d ∈ [1, n-1]</code> y calcula su punto público <code>Q = d · G</code> en la curva <code>secp256r1</code>.
+        </p>
 
         <div class="participant-grid">
-          <article class="participant alice" data-participant="alice">
-            <div class="participant-heading"><span class="avatar">A</span><div><h3>Alice</h3><span class="key-state" id="alice-state">Sin claves</span></div></div>
-            <button type="button" class="button button-outline generate-key" data-owner="alice">Generar par de claves</button>
-            <div class="key-field"><div class="field-heading"><label for="alice-public">Clave pública</label><button type="button" class="copy-button" data-copy="alice-public" aria-label="Copiar clave pública de Alice" title="Copiar clave pública">Copiar</button></div><textarea id="alice-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
-            <div class="key-field private-field"><div class="field-heading"><label for="alice-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="alice-private" aria-pressed="false">Revelar</button></div><textarea id="alice-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          <!-- Participante: ALICE -->
+          <article class="participant-card alice" data-participant="alice">
+            <div class="participant-header">
+              <div class="avatar avatar-alice">A</div>
+              <div class="participant-info">
+                <h3>Alice</h3>
+                <span class="key-state" id="alice-state">Sin claves</span>
+              </div>
+            </div>
+            
+            <button type="button" class="btn secondary-btn w-100 generate-key" data-owner="alice">
+              🔑 Generar Par de Alice
+            </button>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="alice-public">Punto Público A = a·G (Hex 65B)</label>
+                <button type="button" class="copy-btn" data-copy="alice-public" title="Copiar punto público">Copiar</button>
+              </div>
+              <textarea id="alice-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+            </div>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="alice-private">Escalar Privado a (256 bits)</label>
+                <button type="button" class="reveal-btn" data-reveal="alice-private" aria-pressed="false">Revelar</button>
+              </div>
+              <textarea id="alice-private" class="private-input" readonly spellcheck="false" placeholder="Oculto por seguridad"></textarea>
+            </div>
           </article>
 
-          <article class="participant bob" data-participant="bob">
-            <div class="participant-heading"><span class="avatar">B</span><div><h3>Bob</h3><span class="key-state" id="bob-state">Sin claves</span></div></div>
-            <button type="button" class="button button-outline generate-key" data-owner="bob">Generar par de claves</button>
-            <div class="key-field"><div class="field-heading"><label for="bob-public">Clave pública</label><button type="button" class="copy-button" data-copy="bob-public" aria-label="Copiar clave pública de Bob" title="Copiar clave pública">Copiar</button></div><textarea id="bob-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
-            <div class="key-field private-field"><div class="field-heading"><label for="bob-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="bob-private" aria-pressed="false">Revelar</button></div><textarea id="bob-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          <!-- Participante: BOB -->
+          <article class="participant-card bob" data-participant="bob">
+            <div class="participant-header">
+              <div class="avatar avatar-bob">B</div>
+              <div class="participant-info">
+                <h3>Bob</h3>
+                <span class="key-state" id="bob-state">Sin claves</span>
+              </div>
+            </div>
+            
+            <button type="button" class="btn secondary-btn w-100 generate-key" data-owner="bob">
+              🔑 Generar Par de Bob
+            </button>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="bob-public">Punto Público B = b·G (Hex 65B)</label>
+                <button type="button" class="copy-btn" data-copy="bob-public" title="Copiar punto público">Copiar</button>
+              </div>
+              <textarea id="bob-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+            </div>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="bob-private">Escalar Privado b (256 bits)</label>
+                <button type="button" class="reveal-btn" data-reveal="bob-private" aria-pressed="false">Revelar</button>
+              </div>
+              <textarea id="bob-private" class="private-input" readonly spellcheck="false" placeholder="Oculto por seguridad"></textarea>
+            </div>
           </article>
 
-          <article class="participant candy" data-participant="candy">
-            <div class="participant-heading"><span class="avatar">C</span><div><h3>Candy</h3><span class="key-state" id="candy-state">Sin claves</span></div></div>
-            <button type="button" class="button button-outline generate-key" data-owner="candy">Generar par de claves</button>
-            <div class="key-field"><div class="field-heading"><label for="candy-public">Clave pública</label><button type="button" class="copy-button" data-copy="candy-public" aria-label="Copiar clave pública de Candy" title="Copiar clave pública">Copiar</button></div><textarea id="candy-public" readonly spellcheck="false" placeholder="Se mostrará al generar las claves"></textarea></div>
-            <div class="key-field private-field"><div class="field-heading"><label for="candy-private">Clave privada</label><button type="button" class="reveal-button" data-reveal="candy-private" aria-pressed="false">Revelar</button></div><textarea id="candy-private" readonly spellcheck="false" placeholder="Oculta por seguridad"></textarea></div>
+          <!-- Participante: CANDY -->
+          <article class="participant-card candy" data-participant="candy">
+            <div class="participant-header">
+              <div class="avatar avatar-candy">C</div>
+              <div class="participant-info">
+                <h3>Candy</h3>
+                <span class="key-state" id="candy-state">Sin claves</span>
+              </div>
+            </div>
+            
+            <button type="button" class="btn secondary-btn w-100 generate-key" data-owner="candy">
+              🔑 Generar Par de Candy
+            </button>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="candy-public">Punto Público C = c·G (Hex 65B)</label>
+                <button type="button" class="copy-btn" data-copy="candy-public" title="Copiar punto público">Copiar</button>
+              </div>
+              <textarea id="candy-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+            </div>
+
+            <div class="key-field">
+              <div class="field-heading">
+                <label for="candy-private">Escalar Privado c (256 bits)</label>
+                <button type="button" class="reveal-btn" data-reveal="candy-private" aria-pressed="false">Revelar</button>
+              </div>
+              <textarea id="candy-private" class="private-input" readonly spellcheck="false" placeholder="Oculto por seguridad"></textarea>
+            </div>
           </article>
         </div>
-        <p class="private-warning"><span aria-hidden="true">!</span> Las claves privadas solo se revelan bajo demanda. En un acuerdo real, nunca se comparten ni se muestran.</p>
+
+        <div class="security-note">
+          <span class="note-badge">Aviso de Seguridad</span>
+          <p>
+            Los escalares privados <code>a</code>, <code>b</code> y <code>c</code> jamás viajan por el canal inseguro ni por las memorias USB. Permanecen estrictamente confinados en el dispositivo local de cada participante.
+          </p>
+        </div>
       </section>
 
-      <section class="exchange-section" aria-labelledby="exchange-title">
-        <div class="section-heading">
-          <div><p class="eyebrow">02 — Intercambio simulado por USB</p><h2 id="exchange-title">Tres rondas hasta el secreto</h2></div>
-          <div class="exchange-actions"><button type="button" class="button button-quiet" id="reset-exchange">Reiniciar</button><button type="button" class="button button-primary" id="next-step" disabled>Iniciar intercambio <span aria-hidden="true">→</span></button></div>
+      <!-- ========================================================
+           SECCIÓN 2: INTERCAMBIO EN ANILLO (USB / RONDAS)
+           ======================================================== -->
+      <section class="card full-width">
+        <div class="card-header-flex">
+          <div>
+            <span class="card-tag">FASE 02 &bull; PROTOCOLO DE INTERCAMBIO CÍCLICO</span>
+            <h2 class="card-title">Intercambio Tripartito por Rondas</h2>
+          </div>
+          <div class="exchange-actions">
+            <button type="button" class="btn ghost-btn" id="reset-exchange">Reiniciar Rondas</button>
+            <button type="button" class="btn primary-btn" id="next-step" disabled>
+              Iniciar Intercambio &rarr;
+            </button>
+          </div>
         </div>
 
-        <div class="round-list" aria-live="polite">
-          <article class="round-item" id="round-1"><div class="round-number">01</div><div class="round-content"><div class="round-title"><h3>Claves públicas</h3><span class="round-status">Pendiente</span></div><p>Cada participante comparte su punto público: <code>A = aG</code>, <code>B = bG</code> y <code>C = cG</code>.</p><div class="round-data" id="round-1-data"><span>Esperando las tres claves públicas</span></div></div></article>
-          <article class="round-item pending" id="round-2"><div class="round-number">02</div><div class="round-content"><div class="round-title"><h3>Puntos parciales por USB</h3><span class="round-status">Pendiente</span></div><p>La memoria circula un punto: Alice calcula <code>aC</code>, Bob calcula <code>bA</code> y Candy calcula <code>cB</code>.</p><div class="round-data" id="round-2-data"><span>Esperando la primera ronda</span></div></div></article>
-          <article class="round-item pending" id="round-3"><div class="round-number">03</div><div class="round-content"><div class="round-title"><h3>Derivación independiente</h3><span class="round-status">Pendiente</span></div><p>Con el parcial recibido, cada participante calcula el punto <code>abcG</code> sin revelar su escalar privado.</p><div class="round-data" id="round-3-data"><span>Esperando la segunda ronda</span></div></div></article>
+        <!-- Diagrama SVG Interactivo del Anillo Tripartito -->
+        <div class="diagram-wrapper">
+          <svg id="ring-diagram" viewBox="0 0 760 270" class="ring-svg">
+            <defs>
+              <marker id="arrow-emerald" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M 1 1 L 7 4 L 1 7 Z" fill="#10b981" />
+              </marker>
+              <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M 1 1 L 7 4 L 1 7 Z" fill="#6366f1" />
+              </marker>
+              <marker id="arrow-amber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M 1 1 L 7 4 L 1 7 Z" fill="#f59e0b" />
+              </marker>
+              <filter id="node-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <!-- Líneas de transporte cíclico entre participantes -->
+            <!-- Alice (160, 80) -> Bob (600, 80) -->
+            <path id="path-a-b" class="circuit-path" d="M 210 75 Q 380 35 550 75" marker-end="url(#arrow-blue)" />
+            <text id="lbl-a-b" class="circuit-label" x="380" y="42" text-anchor="middle">USB 1: Punto A</text>
+
+            <!-- Bob (600, 80) -> Candy (380, 220) -->
+            <path id="path-b-c" class="circuit-path" d="M 570 115 Q 510 195 425 215" marker-end="url(#arrow-amber)" />
+            <text id="lbl-b-c" class="circuit-label" x="525" y="180" text-anchor="middle">USB 2: Punto B</text>
+
+            <!-- Candy (380, 220) -> Alice (160, 80) -->
+            <path id="path-c-a" class="circuit-path" d="M 335 215 Q 250 195 190 115" marker-end="url(#arrow-emerald)" />
+            <text id="lbl-c-a" class="circuit-label" x="235" y="180" text-anchor="middle">USB 3: Punto C</text>
+
+            <!-- Nodos de los 3 Participantes -->
+            <!-- Alicia -->
+            <g class="diagram-node node-alice" transform="translate(160, 80)">
+              <circle r="36" class="node-bg" />
+              <text y="5" class="node-avatar">A</text>
+              <text y="52" class="node-name">Alice</text>
+              <text y="66" class="node-role" id="svg-alice-sub">Público: A = aG</text>
+            </g>
+
+            <!-- Bob -->
+            <g class="diagram-node node-bob" transform="translate(600, 80)">
+              <circle r="36" class="node-bg" />
+              <text y="5" class="node-avatar">B</text>
+              <text y="52" class="node-name">Bob</text>
+              <text y="66" class="node-role" id="svg-bob-sub">Público: B = bG</text>
+            </g>
+
+            <!-- Candy -->
+            <g class="diagram-node node-candy" transform="translate(380, 215)">
+              <circle r="36" class="node-bg" />
+              <text y="5" class="node-avatar">C</text>
+              <text y="50" class="node-name">Candy</text>
+              <text y="64" class="node-role" id="svg-candy-sub">Público: C = cG</text>
+            </g>
+          </svg>
         </div>
-        <div class="notice" id="app-message" role="status" aria-live="polite">Genera un par de claves para Alice, Bob y Candy para habilitar el intercambio.</div>
+
+        <!-- Lista de Rondas del Protocolo -->
+        <div class="round-stepper">
+          
+          <!-- Ronda 1 -->
+          <article class="round-card" id="round-1">
+            <div class="round-badge">01</div>
+            <div class="round-body">
+              <div class="round-title-bar">
+                <h3>Ronda 1 &bull; Publicación e Intercambio de Puntos Base</h3>
+                <span class="round-status-pill">Pendiente</span>
+              </div>
+              <p class="round-desc">
+                Cada entidad genera y expone su punto público inicial en el canal: <code>A = a·G</code>, <code>B = b·G</code> y <code>C = c·G</code>.
+              </p>
+              <div class="round-data-box" id="round-1-data">
+                <span class="placeholder-text">Esperando la generación de claves para iniciar la Ronda 1...</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Ronda 2 -->
+          <article class="round-card pending" id="round-2">
+            <div class="round-badge">02</div>
+            <div class="round-body">
+              <div class="round-title-bar">
+                <h3>Ronda 2 &bull; Multiplicación Escalar Parcial y Traspaso USB</h3>
+                <span class="round-status-pill">Pendiente</span>
+              </div>
+              <p class="round-desc">
+                Las identidades reciben el punto de su antecesor y calculan los puntos intermedios: Alice computa <code>a·C = ac·G</code>, Bob computa <code>b·A = ba·G</code> y Candy computa <code>c·B = cb·G</code>. Estos puntos circulan en el siguiente ciclo USB.
+              </p>
+              <div class="round-data-box" id="round-2-data">
+                <span class="placeholder-text">Esperando la finalización de la Ronda 1...</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Ronda 3 -->
+          <article class="round-card pending" id="round-3">
+            <div class="round-badge">03</div>
+            <div class="round-body">
+              <div class="round-title-bar">
+                <h3>Ronda 3 &bull; Derivación Independiente del Secreto Compartido</h3>
+                <span class="round-status-pill">Pendiente</span>
+              </div>
+              <p class="round-desc">
+                Con el punto parcial recibido en el segundo traspaso USB, cada participante multiplica su propio escalar secreto local:
+                Alice computa <code>a·(cb·G) = abc·G</code>; Bob computa <code>b·(ac·G) = bac·G = abc·G</code>; Candy computa <code>c·(ba·G) = cba·G = abc·G</code>.
+              </p>
+              <div class="round-data-box" id="round-3-data">
+                <span class="placeholder-text">Esperando la finalización de la Ronda 2...</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
       </section>
 
-      <section class="result-section" id="result-section" aria-labelledby="result-title" hidden>
-        <div class="result-heading"><div><p class="eyebrow">03 — Verificación</p><h2 id="result-title">El secreto coincide</h2></div><span class="verified-badge"><span aria-hidden="true">✓</span> Coincidencia verificada</span></div>
-        <p class="result-copy">Cada participante llegó al mismo punto <code>abcG</code>. Su coordenada X, codificada en hexadecimal, es el secreto de grupo de esta demostración.</p>
-        <div class="shared-secret" id="shared-secret"></div>
+      <!-- ========================================================
+           SECCIÓN 3: RESULTADOS Y VERIFICACIÓN CRIPTOGRÁFICA
+           ======================================================== -->
+      <section class="card full-width" id="result-section" hidden>
+        <div class="card-header-flex">
+          <div>
+            <span class="card-tag">FASE 03 &bull; VERIFICACIÓN Y DERIVACIÓN DE LLAVE SIMÉTRICA</span>
+            <h2 class="card-title">Secreto Compartido Unánime</h2>
+          </div>
+          <span class="verified-pill">
+            <span class="verified-icon">✓</span> Acuerdo Verificado (abc·G)
+          </span>
+        </div>
+
+        <p class="section-desc">
+          Las tres partes independientes han calculado el mismo punto en la curva elíptica <code>P-256</code> sin que ninguna de ellas haya revelado jamás su escalar secreto privado. La coordenada <code>X</code> de dicho punto se utiliza como material secreto (Pre-Master Secret).
+        </p>
+
+        <!-- Secreto Compartido Hex -->
+        <div class="shared-secret-box">
+          <div class="secret-label-bar">
+            <span>PUNTO SECRETO abc·G &bull; COORDENADA X (256 BITS)</span>
+            <button type="button" class="copy-btn" id="copy-secret-btn">Copiar Secreto</button>
+          </div>
+          <div class="secret-hex-value" id="shared-secret"></div>
+        </div>
+
+        <!-- Clave Simétrica Derivada KDF (SHA-256) -->
+        <div class="kdf-secret-box">
+          <div class="secret-label-bar">
+            <span>LLAVE SIMÉTRICA DERIVADA KDF: SHA-256(Coordenada X) &bull; PARA AES-256-GCM</span>
+            <button type="button" class="copy-btn" id="copy-kdf-btn">Copiar Clave Simétrica</button>
+          </div>
+          <div class="kdf-hex-value" id="kdf-derived-key">Calculando hash SHA-256...</div>
+        </div>
+
+        <!-- Grid Comparativo de los 3 Participantes -->
         <div class="result-grid" id="participant-results"></div>
-        <p class="demo-caveat">Demostración académica: el punto compartido se usa aquí como resultado visual. En un protocolo de producción se deriva una clave simétrica con una KDF (por ejemplo, HKDF) y se autentican las identidades para evitar ataques de intermediario.</p>
       </section>
+
+      <!-- ========================================================
+           SECCIÓN 4: FUNDAMENTO TEÓRICO Y MATEMÁTICO
+           ======================================================== -->
+      <section class="card full-width theoretical-card">
+        <h2 class="card-title">Fundamento Criptográfico &bull; ECDH Tripartito</h2>
+        
+        <div class="theory-grid">
+          <div class="theory-col">
+            <h3 class="theory-subtitle">1. Parámetros de la Curva P-256 (NIST)</h3>
+            <p class="theory-p">
+              Definida por la ecuación corta de Weierstrass:
+              <br><code>y² ≡ x³ - 3x + b (mod p)</code>
+            </p>
+            <ul class="theory-list">
+              <li><strong>Primo p:</strong> <code>2²⁵⁶ - 2²²⁴ + 2¹⁹² + 2⁹⁶ - 1</code></li>
+              <li><strong>Orden n:</strong> ~ <code>2²⁵⁶</code> (orden primo de subgrupo)</li>
+              <li><strong>Cofactor h:</strong> <code>1</code> (todo punto distinto de $\mathcal{O}$ es generador)</li>
+              <li><strong>Seguridad:</strong> Nivel de 128 bits de seguridad cuántica-clásica.</li>
+            </ul>
+          </div>
+
+          <div class="theory-col">
+            <h3 class="theory-subtitle">2. Álgebra del Intercambio Circular</h3>
+            <p class="theory-p">
+              Gracias a la asociatividad y conmutatividad de la multiplicación escalar sobre curvas elípticas:
+            </p>
+            <div class="formula-box">
+              <div class="formula-line">Alice: a · (c · B) = a · (cb · G) = abc · G</div>
+              <div class="formula-line">Bob: b · (a · C) = b · (ac · G) = bac · G = abc · G</div>
+              <div class="formula-line">Candy: c · (b · A) = c · (ba · G) = cba · G = abc · G</div>
+            </div>
+            <p class="theory-p">
+              Cualquier espía que observe el canal o los dispositivos USB solo tiene acceso a $\{A, B, C\}$ y a los parciales $\{acG, baG, cbG\}$. Obtener $abcG$ a partir de ellos es el <strong>Problema Computacional de Diffie-Hellman (CDH)</strong> en curvas elípticas, computacionalmente intratable sin conocer los escalares privados.
+            </p>
+          </div>
+        </div>
+      </section>
+
     </main>
-    <footer class="footer"><span>LABORATORIO DE CRIPTOGRAFÍA</span><span>ECDH · CURVA P-256</span></footer>
+
+    <!-- Footer Unificado -->
+    <footer class="footer">
+      <div class="footer-content">
+        <span>Laboratorio de Criptografía &bull; Práctica 03: ECDH Tripartito</span>
+        <span>Escuela Superior de Cómputo (ESCOM IPN) &bull; Dra. Nidia Cortez</span>
+      </div>
+    </footer>
+
   </div>
 </body>
 </html>
