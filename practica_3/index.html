@@ -43,6 +43,7 @@
         <span class="preset-label">Acciones rápidas:</span>
         <button type="button" class="pill-btn active" id="btn-quick-generate-all">⚡ Generar las 3 Claves</button>
         <button type="button" class="pill-btn" id="btn-quick-run-flow">▶ Simular Flujo Completo</button>
+        <button type="button" class="pill-btn" id="btn-modal-usb">📂 Simular USB (Importar / Exportar)</button>
         <button type="button" class="pill-btn danger-pill" id="btn-quick-reset">🔄 Reiniciar</button>
         <span class="pill-btn static-pill">
           <span class="live-dot"></span> P-256 (FIPS 186-5)
@@ -53,8 +54,54 @@
     <!-- Banner global de estado / notificaciones -->
     <div class="status-banner info-status" id="app-message" role="status" aria-live="polite">
       <span class="status-icon">ℹ</span>
-      <span class="status-text">Genera un par de claves para Alice, Bob y Candy para comenzar la simulación del intercambio cíclico.</span>
+      <span class="status-text">Genera un par de claves para Alice, Bob y Candy o impórtalas desde archivos USB para iniciar la simulación.</span>
     </div>
+
+    <!-- Modal / Panel de Importación y Exportación USB -->
+    <section class="card usb-panel hidden" id="usb-panel">
+      <div class="card-header-flex">
+        <div>
+          <span class="card-tag">MEMORIAS USB &bull; ALMACENAMIENTO EXTERNO</span>
+          <h2 class="card-title">Gestión de Claves por Dispositivo USB</h2>
+        </div>
+        <button type="button" class="btn ghost-btn" id="btn-close-usb">✕ Cerrar Panel USB</button>
+      </div>
+      <p class="section-desc">
+        Simula la inserción de una memoria USB en el laboratorio para cargar claves privadas/públicas existentes en formato JSON o exportar las claves activas hacia archivos descargables.
+      </p>
+
+      <div class="usb-actions-grid">
+        <!-- Exportar / Importar Paquete Completo -->
+        <div class="usb-card-block">
+          <h3>📦 Paquete Global de las 3 Entidades</h3>
+          <p>Permite exportar o importar el trío completo (Alice, Bob y Candy) en un solo archivo <code>claves_usb_ecdh.json</code>.</p>
+          <div class="usb-btn-row">
+            <button type="button" class="btn secondary-btn" id="btn-export-bundle">
+              💾 Exportar Paquete a USB (.json)
+            </button>
+            <label class="btn secondary-btn file-label">
+              📂 Cargar Paquete desde USB
+              <input type="file" id="file-bundle-input" accept=".json,.txt" class="hidden-input">
+            </label>
+          </div>
+        </div>
+
+        <!-- Carga Manual Directa de Clave Individual -->
+        <div class="usb-card-block">
+          <h3>🔑 Inyección Manual de Escalar Privado</h3>
+          <p>Pega un escalar hexadecimal de 256 bits (32 bytes) para un participante y la biblioteca calculará su punto público P-256:</p>
+          <div class="usb-manual-form">
+            <select id="usb-target-select" class="usb-select">
+              <option value="alice">Alice (Participante 1)</option>
+              <option value="bob">Bob (Participante 2)</option>
+              <option value="candy">Candy (Participante 3)</option>
+            </select>
+            <input type="text" id="usb-private-input" class="usb-text-input" placeholder="Escalar hex (64 caracteres, ej: 1a2b3c...)" maxlength="64">
+            <button type="button" class="btn primary-btn" id="btn-usb-inject">Validar e Inyectar</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <main class="main-grid">
       
@@ -65,14 +112,19 @@
         <div class="card-header-flex">
           <div>
             <span class="card-tag">FASE 01 &bull; IDENTIDADES CRIPTOGRÁFICAS</span>
-            <h2 class="card-title">Generación de Pares de Claves (P-256)</h2>
+            <h2 class="card-title">Generación e Importación de Pares de Claves (P-256)</h2>
           </div>
-          <button type="button" class="btn primary-btn" id="generate-all">
-            <span>✨</span> Generar las 3 Identidades
-          </button>
+          <div class="header-action-group">
+            <button type="button" class="btn ghost-btn" id="btn-toggle-usb-top">
+              💾 Menú USB
+            </button>
+            <button type="button" class="btn primary-btn" id="generate-all">
+              <span>✨</span> Generar las 3 Identidades
+            </button>
+          </div>
         </div>
         <p class="section-desc">
-          Cada participante selecciona de manera aleatoria y segura un escalar privado <code>d ∈ [1, n-1]</code> y calcula su punto público <code>Q = d · G</code> en la curva <code>secp256r1</code>.
+          Cada participante selecciona de manera aleatoria y segura un escalar privado <code>d ∈ [1, n-1]</code> mediante la biblioteca criptográfica <code>elliptic.js</code> respaldada por el CSPRNG del sistema operativo (<code>window.crypto.getRandomValues</code>), computando su punto público afín <code>Q = d · G</code> en la curva <code>secp256r1</code>.
         </p>
 
         <div class="participant-grid">
@@ -90,12 +142,23 @@
               🔑 Generar Par de Alice
             </button>
 
+            <!-- Acciones USB por participante -->
+            <div class="participant-usb-bar">
+              <label class="btn-mini-usb file-label-mini" title="Cargar archivo de Alice desde memoria USB">
+                📂 Importar USB
+                <input type="file" data-usb-owner="alice" accept=".json,.txt" class="hidden-input participant-file-input">
+              </label>
+              <button type="button" class="btn-mini-usb export-single-usb" data-usb-owner="alice" title="Guardar clave de Alice en archivo USB">
+                💾 Guardar USB
+              </button>
+            </div>
+
             <div class="key-field">
               <div class="field-heading">
                 <label for="alice-public">Punto Público A = a·G (Hex 65B)</label>
                 <button type="button" class="copy-btn" data-copy="alice-public" title="Copiar punto público">Copiar</button>
               </div>
-              <textarea id="alice-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+              <textarea id="alice-public" readonly spellcheck="false" placeholder="Esperando generación o carga..."></textarea>
             </div>
 
             <div class="key-field">
@@ -121,12 +184,23 @@
               🔑 Generar Par de Bob
             </button>
 
+            <!-- Acciones USB por participante -->
+            <div class="participant-usb-bar">
+              <label class="btn-mini-usb file-label-mini" title="Cargar archivo de Bob desde memoria USB">
+                📂 Importar USB
+                <input type="file" data-usb-owner="bob" accept=".json,.txt" class="hidden-input participant-file-input">
+              </label>
+              <button type="button" class="btn-mini-usb export-single-usb" data-usb-owner="bob" title="Guardar clave de Bob en archivo USB">
+                💾 Guardar USB
+              </button>
+            </div>
+
             <div class="key-field">
               <div class="field-heading">
                 <label for="bob-public">Punto Público B = b·G (Hex 65B)</label>
                 <button type="button" class="copy-btn" data-copy="bob-public" title="Copiar punto público">Copiar</button>
               </div>
-              <textarea id="bob-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+              <textarea id="bob-public" readonly spellcheck="false" placeholder="Esperando generación o carga..."></textarea>
             </div>
 
             <div class="key-field">
@@ -152,12 +226,23 @@
               🔑 Generar Par de Candy
             </button>
 
+            <!-- Acciones USB por participante -->
+            <div class="participant-usb-bar">
+              <label class="btn-mini-usb file-label-mini" title="Cargar archivo de Candy desde memoria USB">
+                📂 Importar USB
+                <input type="file" data-usb-owner="candy" accept=".json,.txt" class="hidden-input participant-file-input">
+              </label>
+              <button type="button" class="btn-mini-usb export-single-usb" data-usb-owner="candy" title="Guardar clave de Candy en archivo USB">
+                💾 Guardar USB
+              </button>
+            </div>
+
             <div class="key-field">
               <div class="field-heading">
                 <label for="candy-public">Punto Público C = c·G (Hex 65B)</label>
                 <button type="button" class="copy-btn" data-copy="candy-public" title="Copiar punto público">Copiar</button>
               </div>
-              <textarea id="candy-public" readonly spellcheck="false" placeholder="Esperando generación..."></textarea>
+              <textarea id="candy-public" readonly spellcheck="false" placeholder="Esperando generación o carga..."></textarea>
             </div>
 
             <div class="key-field">
@@ -173,7 +258,7 @@
         <div class="security-note">
           <span class="note-badge">Aviso de Seguridad</span>
           <p>
-            Los escalares privados <code>a</code>, <code>b</code> y <code>c</code> jamás viajan por el canal inseguro ni por las memorias USB. Permanecen estrictamente confinados en el dispositivo local de cada participante.
+            Los escalares privados <code>a</code>, <code>b</code> y <code>c</code> jamás se transmiten por el canal inseguro. En un entorno físico de laboratorio, cada alumno conserva su clave privada en su equipo y solo deposita en la memoria USB los puntos públicos o parciales.
           </p>
         </div>
       </section>
@@ -215,20 +300,16 @@
             </defs>
 
             <!-- Líneas de transporte cíclico entre participantes -->
-            <!-- Alice (160, 80) -> Bob (600, 80) -->
             <path id="path-a-b" class="circuit-path" d="M 210 75 Q 380 35 550 75" marker-end="url(#arrow-blue)" />
             <text id="lbl-a-b" class="circuit-label" x="380" y="42" text-anchor="middle">USB 1: Punto A</text>
 
-            <!-- Bob (600, 80) -> Candy (380, 220) -->
             <path id="path-b-c" class="circuit-path" d="M 570 115 Q 510 195 425 215" marker-end="url(#arrow-amber)" />
             <text id="lbl-b-c" class="circuit-label" x="525" y="180" text-anchor="middle">USB 2: Punto B</text>
 
-            <!-- Candy (380, 220) -> Alice (160, 80) -->
             <path id="path-c-a" class="circuit-path" d="M 335 215 Q 250 195 190 115" marker-end="url(#arrow-emerald)" />
             <text id="lbl-c-a" class="circuit-label" x="235" y="180" text-anchor="middle">USB 3: Punto C</text>
 
             <!-- Nodos de los 3 Participantes -->
-            <!-- Alicia -->
             <g class="diagram-node node-alice" transform="translate(160, 80)">
               <circle r="36" class="node-bg" />
               <text y="5" class="node-avatar">A</text>
@@ -236,7 +317,6 @@
               <text y="66" class="node-role" id="svg-alice-sub">Público: A = aG</text>
             </g>
 
-            <!-- Bob -->
             <g class="diagram-node node-bob" transform="translate(600, 80)">
               <circle r="36" class="node-bg" />
               <text y="5" class="node-avatar">B</text>
@@ -244,7 +324,6 @@
               <text y="66" class="node-role" id="svg-bob-sub">Público: B = bG</text>
             </g>
 
-            <!-- Candy -->
             <g class="diagram-node node-candy" transform="translate(380, 215)">
               <circle r="36" class="node-bg" />
               <text y="5" class="node-avatar">C</text>
@@ -269,7 +348,7 @@
                 Cada entidad genera y expone su punto público inicial en el canal: <code>A = a·G</code>, <code>B = b·G</code> y <code>C = c·G</code>.
               </p>
               <div class="round-data-box" id="round-1-data">
-                <span class="placeholder-text">Esperando la generación de claves para iniciar la Ronda 1...</span>
+                <span class="placeholder-text">Esperando la generación o importación de claves para iniciar la Ronda 1...</span>
               </div>
             </div>
           </article>
@@ -353,40 +432,71 @@
       </section>
 
       <!-- ========================================================
-           SECCIÓN 4: FUNDAMENTO TEÓRICO Y MATEMÁTICO
+           SECCIÓN 4: FUNDAMENTO TEÓRICO, NIST P-256 Y BIBLIOTECA
            ======================================================== -->
       <section class="card full-width theoretical-card">
-        <h2 class="card-title">Fundamento Criptográfico &bull; ECDH Tripartito</h2>
+        <h2 class="card-title">Fundamento Criptográfico &bull; ¿Por qué NIST P-256 y Biblioteca `elliptic.js`?</h2>
         
         <div class="theory-grid">
+          
+          <!-- Justificación NIST P-256 -->
           <div class="theory-col">
-            <h3 class="theory-subtitle">1. Parámetros de la Curva P-256 (NIST)</h3>
+            <h3 class="theory-subtitle">1. Justificación de la Curva NIST P-256 (secp256r1)</h3>
             <p class="theory-p">
-              Definida por la ecuación corta de Weierstrass:
-              <br><code>y² ≡ x³ - 3x + b (mod p)</code>
+              La elección de la curva estándar <strong>NIST P-256 (FIPS 186-5 / RFC 5903)</strong> obedece a criterios determinantes de seguridad, rendimiento algebraico y estandarización global:
             </p>
             <ul class="theory-list">
-              <li><strong>Primo p:</strong> <code>2²⁵⁶ - 2²²⁴ + 2¹⁹² + 2⁹⁶ - 1</code></li>
-              <li><strong>Orden n:</strong> ~ <code>2²⁵⁶</code> (orden primo de subgrupo)</li>
-              <li><strong>Cofactor h:</strong> <code>1</code> (todo punto distinto de $\mathcal{O}$ es generador)</li>
-              <li><strong>Seguridad:</strong> Nivel de 128 bits de seguridad cuántica-clásica.</li>
+              <li>
+                <strong>Eficiencia de Aritmética Modular (Primo de Solinas):</strong> 
+                El módulo es un primo pseudo-Mersenne <code>p = 2²⁵⁶ - 2²²⁴ + 2¹⁹² + 2⁹⁶ - 1</code>. Su estructura permite reducciones modulares extremadamente veloces mediante sumas y desplazamientos de palabras de 32/64 bits sin requerir costosas divisiones largas.
+              </li>
+              <li>
+                <strong>Cofactor Unitario (h = 1):</strong>
+                Al ser <code>h = 1</code>, el orden del grupo afín coincide exactamente con el orden primo <code>n</code> del punto generador. <em>Esto imposibilita por completo los ataques de confinamiento en subgrupos pequeños</em> (Small Subgroup Confinement Attacks / Lim-Lee), que son un riesgo latente en curvas con cofactores $h=4$ u $h=8$.
+              </li>
+              <li>
+                <strong>Nivel de Seguridad de 128 bits:</strong>
+                Frente a ataques genéricos contra el logaritmo discreto (algoritmo $\rho$ de Pollard con complejidad $\mathcal{O}(\sqrt{n})$), proporciona una cota de seguridad de $2^{128}$ operaciones, equivalente a una clave RSA de 3072 bits, con un costo computacional y tamaño de clave 12 veces menor.
+              </li>
+              <li>
+                <strong>Interoperabilidad Universal:</strong>
+                Es el estándar obligatorio en TLS 1.3 (RFC 8446), SSH v2 (RFC 5656), Apple Secure Enclave, Google Titan Security Keys y FIDO2/WebAuthn.
+              </li>
             </ul>
           </div>
 
+          <!-- Generación con Biblioteca Criptográfica -->
           <div class="theory-col">
-            <h3 class="theory-subtitle">2. Álgebra del Intercambio Circular</h3>
+            <h3 class="theory-subtitle">2. Generación Criptográfica Rigurosa (Biblioteca `elliptic.js`)</h3>
             <p class="theory-p">
-              Gracias a la asociatividad y conmutatividad de la multiplicación escalar sobre curvas elípticas:
+              En este sistema, las claves <strong>no se simulan ni se obtienen mediante funciones matemáticas inseguras como <code>Math.random()</code></strong>:
             </p>
+            <ul class="theory-list">
+              <li>
+                <strong>CSPRNG del Sistema Operativo:</strong>
+                La biblioteca <code>elliptic.js</code> se apoya en <code>window.crypto.getRandomValues()</code>, obteniendo entropía real provista por el hardware del sistema operativo (ruido térmico, interrupciones).
+              </li>
+              <li>
+                <strong>Aritmética Proyectiva Jacobiana:</strong>
+                Las operaciones de suma y doblado de puntos se computan en coordenadas proyectivas jacobianas $(X : Y : Z)$, evitando divisiones modulares intermedias y mitigando ataques de canal lateral de temporización (*timing attacks*).
+              </li>
+              <li>
+                <strong>Validación de Puntos en la Curva:</strong>
+                Tanto en la generación como en la <strong>importación desde archivos USB</strong>, cada punto público $Q = (x, y)$ es verificado contra la ecuación de Weierstrass $y^2 \equiv x^3 - 3x + b \pmod p$ y se comprueba que no corresponda al punto al infinito $\mathcal{O}$ ni a un escalar fuera de $[1, n-1]$.
+              </li>
+            </ul>
+
+            <h3 class="theory-subtitle" style="margin-top: 1rem;">3. Álgebra del Intercambio Circular (CDH)</h3>
             <div class="formula-box">
               <div class="formula-line">Alice: a · (c · B) = a · (cb · G) = abc · G</div>
               <div class="formula-line">Bob: b · (a · C) = b · (ac · G) = bac · G = abc · G</div>
               <div class="formula-line">Candy: c · (b · A) = c · (ba · G) = cba · G = abc · G</div>
             </div>
             <p class="theory-p">
-              Cualquier espía que observe el canal o los dispositivos USB solo tiene acceso a $\{A, B, C\}$ y a los parciales $\{acG, baG, cbG\}$. Obtener $abcG$ a partir de ellos es el <strong>Problema Computacional de Diffie-Hellman (CDH)</strong> en curvas elípticas, computacionalmente intratable sin conocer los escalares privados.
+              El secreto común derivado es la coordenada $X$ del punto $abcG$, que posteriormente pasa por <strong>SHA-256 (KDF)</strong> para entregar una clave simétrica robusta para <strong>AES-256-GCM</strong>.
             </p>
           </div>
+
         </div>
       </section>
 

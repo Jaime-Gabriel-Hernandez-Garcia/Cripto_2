@@ -74,7 +74,7 @@ body {
 }
 
 /* ========================================================
-   HEADER & PRESET PILLS (Idéntico a Práctica 2)
+   HEADER & PRESET PILLS
    ======================================================== */
 .header {
   display: flex;
@@ -238,6 +238,146 @@ body {
 .status-icon {
   font-weight: 700;
   font-size: 1rem;
+}
+
+/* ========================================================
+   PANEL DE GESTIÓN USB (IMPORTACIÓN Y EXPORTACIÓN)
+   ======================================================== */
+.usb-panel {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: #0f1626;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  animation: fadeIn 0.25s ease;
+}
+
+.usb-panel.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.usb-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 800px) {
+  .usb-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.usb-card-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.usb-card-block h3 {
+  font-size: 0.95rem;
+  color: #c7d2fe;
+}
+
+.usb-card-block p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.usb-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.file-label {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.hidden-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+}
+
+.usb-manual-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.usb-select, .usb-text-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.65rem;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+
+.usb-text-input {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.usb-select:focus, .usb-text-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+/* Barra de botones USB en cada tarjeta de participante */
+.participant-usb-bar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-mini-usb {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  transition: all 0.15s ease;
+}
+
+.btn-mini-usb:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--accent-primary);
+}
+
+.file-label-mini {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.header-action-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* ========================================================
@@ -483,7 +623,7 @@ textarea::placeholder {
 }
 
 /* ========================================================
-   BOTONES DEL SISTEMA (Consistentes con Práctica 1 y 2)
+   BOTONES DEL SISTEMA
    ======================================================== */
 .btn {
   font-family: var(--font-sans);
@@ -582,7 +722,6 @@ textarea::placeholder {
   stroke: var(--accent-cyan);
   stroke-dasharray: none;
   filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
-  animation: dash-glow 1.5s linear infinite;
 }
 
 .circuit-label {
@@ -948,9 +1087,14 @@ textarea::placeholder {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.82rem;
+  gap: 0.65rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.theory-list li strong {
+  color: #e2e8f0;
 }
 
 .theory-list li code {

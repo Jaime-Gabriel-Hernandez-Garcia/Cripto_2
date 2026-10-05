@@ -19,6 +19,18 @@
     participantResults: document.getElementById('participant-results'),
     copySecretBtn: document.getElementById('copy-secret-btn'),
     copyKdfBtn: document.getElementById('copy-kdf-btn'),
+    
+    // Panel USB
+    usbPanel: document.getElementById('usb-panel'),
+    btnModalUsb: document.getElementById('btn-modal-usb'),
+    btnToggleUsbTop: document.getElementById('btn-toggle-usb-top'),
+    btnCloseUsb: document.getElementById('btn-close-usb'),
+    btnExportBundle: document.getElementById('btn-export-bundle'),
+    fileBundleInput: document.getElementById('file-bundle-input'),
+    usbTargetSelect: document.getElementById('usb-target-select'),
+    usbPrivateInput: document.getElementById('usb-private-input'),
+    btnUsbInject: document.getElementById('btn-usb-inject'),
+
     // Elementos del diagrama SVG
     pathAB: document.getElementById('path-a-b'),
     pathBC: document.getElementById('path-b-c'),
@@ -45,7 +57,7 @@
   // Inicializar o comprobar biblioteca elliptic
   function requireCryptoLibrary() {
     if (!window.elliptic || !window.crypto || !window.crypto.getRandomValues) {
-      throw new Error('No se pudo cargar la librería criptográfica elliptic (P-256) o la fuente de aleatoriedad Web Crypto. Recarga la página.');
+      throw new Error('No se pudo cargar la librería criptográfica elliptic (P-256) o la fuente CSPRNG Web Crypto. Recarga la página.');
     }
     return new window.elliptic.ec('p256');
   }
@@ -58,7 +70,7 @@
     return point.encode('hex', false);
   }
 
-  // Asignar claves generadas a un participante
+  // Asignar claves generadas o importadas a un participante
   function setParticipantKey(name, keyPair) {
     participants[name] = keyPair;
     const pubHex = getPublicHex(keyPair);
@@ -124,7 +136,7 @@
     const r1 = document.getElementById('round-1-data');
     const r2 = document.getElementById('round-2-data');
     const r3 = document.getElementById('round-3-data');
-    if (r1) r1.innerHTML = '<span class="placeholder-text">Esperando la generación de claves para iniciar la Ronda 1...</span>';
+    if (r1) r1.innerHTML = '<span class="placeholder-text">Esperando la generación o importación de claves para iniciar la Ronda 1...</span>';
     if (r2) r2.innerHTML = '<span class="placeholder-text">Esperando la finalización de la Ronda 1...</span>';
     if (r3) r3.innerHTML = '<span class="placeholder-text">Esperando la finalización de la Ronda 2...</span>';
 
@@ -139,7 +151,7 @@
     if (allGenerated) {
       setMessage('Las 3 identidades tienen pares de claves listos. Presiona "Iniciar Intercambio" para comenzar la Ronda 1.', 'info');
     } else {
-      setMessage('Genera un par de claves para Alice, Bob y Candy para comenzar la simulación del intercambio cíclico.', 'info');
+      setMessage('Genera un par de claves para Alice, Bob y Candy o impórtalas desde archivos USB para iniciar la simulación.', 'info');
     }
   }
 
@@ -179,7 +191,7 @@
     if (dom.lblCA) dom.lblCA.textContent = 'C → Alice';
 
     dom.nextStep.textContent = 'Calcular Puntos Parciales (Ronda 2) →';
-    setMessage('Ronda 1 completada: Puntos públicos iniciales generados y colocados en los dispositivos USB.', 'success');
+    setMessage('Ronda 1 completada: Puntos públicos iniciales difundidos en el canal e intercambiados por USB.', 'success');
   }
 
   // Ronda 2: Multiplicación escalar parcial y segundo traspaso USB
@@ -297,6 +309,142 @@
     setMessage('¡Verificación unánime exitosa! Alice, Bob y Candy derivaron de forma autónoma exactamente el mismo secreto de grupo.', 'success');
   }
 
+  // ========================================================
+  // SISTEMA DE IMPORTACIÓN Y EXPORTACIÓN USB
+  // ========================================================
+
+  // Descargar archivo JSON simulando guardar en USB
+  function downloadJsonFile(filename, data) {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Exportar clave individual
+  function exportSingleParticipantKey(name) {
+    if (!participants[name]) {
+      setMessage(`Genera primero la clave de ${displayNames[name]} antes de guardarla en USB.`, 'error');
+      return;
+    }
+    const keyData = {
+      participant: displayNames[name],
+      role: `ECDH Group Member (${name})`,
+      curve: 'NIST P-256 (secp256r1)',
+      privateKeyHex: participants[name].getPrivate('hex'),
+      publicKeyHex: getPublicHex(participants[name]),
+      exportTimestamp: new Date().toISOString()
+    };
+    downloadJsonFile(`clave_usb_${name}_p256.json`, keyData);
+    setMessage(`Clave de ${displayNames[name]} guardada en archivo USB correctamente.`, 'success');
+  }
+
+  // Exportar paquete completo de las 3 identidades
+  function exportBundleKeys() {
+    if (!names.every(name => participants[name])) {
+      setMessage('Genera o importa las 3 claves antes de exportar el paquete USB.', 'error');
+      return;
+    }
+    const bundle = {
+      description: 'Paquete de Claves ECDH Tripartito (Simulación USB)',
+      curve: 'NIST P-256 (secp256r1)',
+      createdAt: new Date().toISOString(),
+      participants: {
+        alice: {
+          privateKeyHex: participants.alice.getPrivate('hex'),
+          publicKeyHex: getPublicHex(participants.alice)
+        },
+        bob: {
+          privateKeyHex: participants.bob.getPrivate('hex'),
+          publicKeyHex: getPublicHex(participants.bob)
+        },
+        candy: {
+          privateKeyHex: participants.candy.getPrivate('hex'),
+          publicKeyHex: getPublicHex(participants.candy)
+        }
+      }
+    };
+    downloadJsonFile('claves_usb_ecdh_p256_bundle.json', bundle);
+    setMessage('Paquete USB con las 3 claves descargado exitosamente.', 'success');
+  }
+
+  // Validar y construir KeyPair desde un escalar privado hex
+  function importPrivateKeyHex(name, privateHex) {
+    const ec = requireCryptoLibrary();
+    const cleanHex = privateHex.trim().replace(/^0x/i, '');
+    if (!/^[0-9a-fA-F]{1,64}$/.test(cleanHex)) {
+      throw new Error('El escalar debe ser una cadena hexadecimal de hasta 64 caracteres (256 bits).');
+    }
+    const keyPair = ec.keyFromPrivate(cleanHex, 'hex');
+    // Validar que el punto generado esté en la curva
+    const pub = keyPair.getPublic();
+    if (!pub || pub.isInfinity()) {
+      throw new Error('El escalar derivó un punto inválido o al infinito en P-256.');
+    }
+    setParticipantKey(name, keyPair);
+    clearExchangeResults();
+    setMessage(`Clave de ${displayNames[name]} importada y verificada en la curva NIST P-256 con éxito.`, 'success');
+  }
+
+  // Leer archivo individual desde USB
+  function handleSingleFileInput(file, targetName) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result.trim();
+        let privHex = '';
+        if (content.startsWith('{')) {
+          const parsed = JSON.parse(content);
+          privHex = parsed.privateKeyHex || parsed.privateKey || parsed.priv || '';
+        } else {
+          privHex = content;
+        }
+        if (!privHex) throw new Error('No se encontró un campo de clave privada en el archivo.');
+        importPrivateKeyHex(targetName, privHex);
+      } catch (err) {
+        setMessage(`Error al importar archivo USB de ${displayNames[targetName]}: ${err.message}`, 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Leer archivo de paquete USB
+  function handleBundleFileInput(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        const pData = parsed.participants || parsed;
+        let loaded = 0;
+        names.forEach(name => {
+          const entry = pData[name];
+          if (entry && (entry.privateKeyHex || entry.privateKey)) {
+            const priv = entry.privateKeyHex || entry.privateKey;
+            importPrivateKeyHex(name, priv);
+            loaded++;
+          }
+        });
+        if (loaded === 0) throw new Error('El archivo no contiene claves válidas para alice, bob o candy.');
+        setMessage(`Se cargaron exitosamente ${loaded} identidades desde el paquete USB.`, 'success');
+      } catch (err) {
+        setMessage(`Error al procesar paquete USB: ${err.message}`, 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ========================================================
+  // LISTENERS Y EVENTOS
+  // ========================================================
+
   // Copiado universal a portapapeles con fallback
   async function copyText(text, btnElement, successText = '¡Copiado!') {
     if (!text) return;
@@ -347,6 +495,63 @@
   if (dom.generateAll) dom.generateAll.addEventListener('click', generateAllKeys);
   if (dom.quickGenerateAll) dom.quickGenerateAll.addEventListener('click', generateAllKeys);
 
+  // Exportar individual USB
+  document.querySelectorAll('.export-single-usb').forEach(btn => {
+    btn.addEventListener('click', () => exportSingleParticipantKey(btn.dataset.usbOwner));
+  });
+
+  // Importar individual USB por input file
+  document.querySelectorAll('.participant-file-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      handleSingleFileInput(e.target.files[0], input.dataset.usbOwner);
+      input.value = '';
+    });
+  });
+
+  // Panel USB toggles
+  function toggleUsbPanel(show) {
+    if (!dom.usbPanel) return;
+    const isHidden = dom.usbPanel.classList.contains('hidden');
+    const target = show !== undefined ? !show : !isHidden;
+    dom.usbPanel.classList.toggle('hidden', target);
+    if (!target) {
+      dom.usbPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  if (dom.btnModalUsb) dom.btnModalUsb.addEventListener('click', () => toggleUsbPanel());
+  if (dom.btnToggleUsbTop) dom.btnToggleUsbTop.addEventListener('click', () => toggleUsbPanel());
+  if (dom.btnCloseUsb) dom.btnCloseUsb.addEventListener('click', () => toggleUsbPanel(false));
+
+  // Exportar paquete USB
+  if (dom.btnExportBundle) dom.btnExportBundle.addEventListener('click', exportBundleKeys);
+
+  // Importar paquete USB
+  if (dom.fileBundleInput) {
+    dom.fileBundleInput.addEventListener('change', (e) => {
+      handleBundleFileInput(e.target.files[0]);
+      e.target.value = '';
+    });
+  }
+
+  // Inyección manual de clave desde panel USB
+  if (dom.btnUsbInject) {
+    dom.btnUsbInject.addEventListener('click', () => {
+      try {
+        const target = dom.usbTargetSelect.value;
+        const hex = dom.usbPrivateInput.value;
+        if (!hex) {
+          setMessage('Introduce un escalar hexadecimal de 256 bits para inyectar.', 'error');
+          return;
+        }
+        importPrivateKeyHex(target, hex);
+        dom.usbPrivateInput.value = '';
+      } catch (err) {
+        setMessage(`Error al inyectar clave: ${err.message}`, 'error');
+      }
+    });
+  }
+
   // Botón de revelado de clave privada
   document.querySelectorAll('.reveal-btn').forEach(button => {
     button.addEventListener('click', () => {
@@ -369,7 +574,7 @@
         if (field && field.value) {
           copyText(field.value, button);
         } else {
-          setMessage('Genera primero las claves para copiar este valor.', 'error');
+          setMessage('Genera o importa primero las claves para copiar este valor.', 'error');
         }
       }
     });
@@ -398,7 +603,7 @@
       try {
         const ec = requireCryptoLibrary();
         if (!names.every(name => participants[name])) {
-          setMessage('Genera primero el par de claves de Alice, Bob y Candy.', 'error');
+          setMessage('Genera o importa primero el par de claves de Alice, Bob y Candy.', 'error');
           return;
         }
         if (exchangeStage === 0) {
@@ -420,27 +625,20 @@
     dom.quickRunFlow.addEventListener('click', async () => {
       try {
         const ec = requireCryptoLibrary();
-        // 1. Generar si faltan
         if (!names.every(name => participants[name])) {
           generateAllKeys();
         } else {
           clearExchangeResults();
         }
 
-        // 2. Ronda 1
         roundOne();
         exchangeStage = 1;
-
-        // Pausa sutil para efecto visual
         await new Promise(r => setTimeout(r, 450));
 
-        // 3. Ronda 2
         roundTwo(ec);
         exchangeStage = 2;
-
         await new Promise(r => setTimeout(r, 450));
 
-        // 4. Ronda 3
         await roundThree();
         exchangeStage = 3;
       } catch (err) {
